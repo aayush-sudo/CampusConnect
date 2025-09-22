@@ -102,14 +102,14 @@ const Welcome = () => {
           <div className="glass-card p-8 md:p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-6">Why Students Love CampusConnect</h2>
+                <h2 className="text-3xl text-black/90 font-bold mb-6">Why Students Love CampusConnect</h2>
                 <div className="space-y-4">
                   {benefits.map((benefit, index) => (
                     <div key={index} className="flex items-center space-x-3">
                       <div className="w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
                         <Check className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-foreground">{benefit}</span>
+                      <span className="text-black">{benefit}</span>
                     </div>
                   ))}
                 </div>
@@ -118,8 +118,8 @@ const Welcome = () => {
                 <div className="w-80 h-80 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full absolute -top-10 -left-10 blur-3xl"></div>
                 <div className="relative glass-card p-8 text-center">
                   <Star className="w-12 h-12 mx-auto mb-4 text-primary" />
-                  <h3 className="text-2xl font-bold mb-2">Join Today</h3>
-                  <p className="text-muted-foreground mb-6">
+                  <h3 className="text-2xl text-black font-bold mb-2">Join Today</h3>
+                  <p className="text-black mb-6">
                     Become part of a thriving campus community
                   </p>
                   <Link to="/signup">

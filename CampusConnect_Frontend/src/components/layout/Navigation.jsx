@@ -38,7 +38,7 @@ const Navigation = () => {
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                 isActive(item.path)
                   ? "bg-primary/20 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  : "text-black hover:text-text hover:bg-accent/50"
               }`}
             >
               <item.icon className="w-4 h-4" />
@@ -53,13 +53,13 @@ const Navigation = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search posts..."
-              className="pl-10 w-64 bg-background/50 border-border/50"
+              className="pl-10 w-64 bg-black text-white placeholder-white border border-black/50 rounded-lg"
             />
           </div>
           
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative text-black">
             <Bell className="w-4 h-4" />
-            <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-primary">
+            <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-primary text-white">
               3
             </Badge>
           </Button>
