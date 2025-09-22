@@ -29,7 +29,7 @@ const Login = () => {
             </div>
             <span className="text-2xl font-bold gradient-text">CampusConnect</span>
           </Link>
-          <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
+          <h1 className="text-3xl font-bold mb-2 gradient-text-green">Welcome back</h1>
           <p className="text-muted-foreground">Sign in to your account to continue</p>
         </div>
 

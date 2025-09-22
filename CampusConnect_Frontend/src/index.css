@@ -171,4 +171,10 @@
     @apply after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right;
     @apply after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
   }
+
+  /* Green gradient text */
+  .gradient-text-green {
+  @apply bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent;
+  }
+
 }
