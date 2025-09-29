@@ -161,7 +161,7 @@ const Chat = () => {
                         <Label htmlFor="participants">Participants (comma-separated)</Label>
                         <Input
                           id="participants"
-                          placeholder="john.doe@university.edu, jane.smith@university.edu"
+                          placeholder="aayush.hardas@somaiya.edu, aditya.sontakke@somaiya.edu,..."
                           value={newChatData.participants}
                           onChange={(e) => setNewChatData({ ...newChatData, participants: e.target.value })}
                           required
