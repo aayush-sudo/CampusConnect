@@ -91,7 +91,7 @@ const Posts = () => {
     {
       id: 6,
       title: "Psychology Research Methods Notes",
-      author: "Anirudha Navuduri",
+      author: "Anirudh Navuduri",
       description: "Comprehensive notes on research methodologies in psychology, including statistical analysis.",
       category: "Psychology",
       tags: ["research", "statistics", "psychology"],

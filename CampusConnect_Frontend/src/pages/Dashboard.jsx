@@ -53,7 +53,7 @@ const Dashboard = () => {
       title: "Organic Chemistry Lab Report Examples",
       description: "Looking for well-formatted lab report examples for organic chemistry course.",
       requester: {
-        name: "Anirudha Navuduri",
+        name: "Anirudh Navuduri",
         avatar: "/placeholder.svg",
         year: "2nd Year",
         major: "Chemistry"
