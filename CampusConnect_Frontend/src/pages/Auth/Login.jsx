@@ -89,7 +89,9 @@ const Login = () => {
               </div>
 
               <Button type="submit" className="btn-hero w-full">
+                <Link to="/home" className="w-full">
                 Sign In
+                </Link>
               </Button>
             </form>
 

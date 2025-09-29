@@ -49,13 +49,13 @@ const Navigation = () => {
 
         {/* Search and Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <div className="relative">
+          {/*<div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search posts..."
               className="pl-10 w-64 bg-black text-white placeholder-white border border-black/50 rounded-lg"
             />
-          </div>
+          </div>*/}
           
           <Button variant="ghost" size="icon" className="relative text-black">
             <Bell className="w-4 h-4" />
