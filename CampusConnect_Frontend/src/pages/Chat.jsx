@@ -25,7 +25,7 @@ const Chat = () => {
     {
       id: 1,
       title: "Machine Learning Study Group",
-      participants: ["Alex Chen", "Sarah Kim", "Mike Davis"],
+      participants: ["Aditya Sontakke", "Aayush Hardas", "Anirudh Navdhuri"],
       lastMessage: "Let's meet tomorrow at 3 PM",
       timestamp: "2 min ago",
       unread: 2,
@@ -34,7 +34,7 @@ const Chat = () => {
     {
       id: 2,
       title: "React Project Team",
-      participants: ["Emma Wilson", "David Park"],
+      participants: ["Aditya Sontakke", "Aayush Hardas", "Anirudh Navdhuri"],
       lastMessage: "I've pushed the latest changes to GitHub",
       timestamp: "1 hour ago",
       unread: 0,
@@ -42,8 +42,8 @@ const Chat = () => {
     },
     {
       id: 3,
-      title: "Sarah Johnson",
-      participants: ["Sarah Johnson"],
+      title: "Aditya",
+      participants: ["Aditya"],
       lastMessage: "Thanks for helping with the algorithms!",
       timestamp: "3 hours ago",
       unread: 1,
@@ -52,7 +52,7 @@ const Chat = () => {
     {
       id: 4,
       title: "Calculus Help",
-      participants: ["Lisa Chang", "Tom Wilson"],
+      participants: ["Aayush", "Anirudh"],
       lastMessage: "The derivative of that function would be...",
       timestamp: "1 day ago",
       unread: 0,
@@ -63,7 +63,7 @@ const Chat = () => {
   const messages = [
     {
       id: 1,
-      sender: "Alex Chen",
+      sender: "Anirudh Navdhuri",
       content: "Hey everyone! Are we still meeting tomorrow to go over the ML assignment?",
       timestamp: "10:30 AM",
       isCurrentUser: false,
@@ -79,7 +79,7 @@ const Chat = () => {
     },
     {
       id: 3,
-      sender: "Sarah Kim",
+      sender: "Aayush Hardas",
       content: "Perfect! I'm working on the data preprocessing part. Should we divide the topics?",
       timestamp: "10:35 AM",
       isCurrentUser: false,
@@ -87,7 +87,7 @@ const Chat = () => {
     },
     {
       id: 4,
-      sender: "Mike Davis",
+      sender: "Aayush Hardas",
       content: "Great idea! I can cover the evaluation metrics section.",
       timestamp: "10:38 AM",
       isCurrentUser: false,
@@ -133,7 +133,7 @@ const Chat = () => {
             {/* Header */}
             <div className="p-4 border-b border-border/50">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Messages</h2>
+                <h2 className="text-xl font-bold text-black">Messages</h2>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button size="sm" className="btn-hero">
@@ -233,7 +233,7 @@ const Chat = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-medium truncate">{chat.title}</h3>
+                          <h3 className="font-medium truncate text-black">{chat.title}</h3>
                           <span className="text-xs text-muted-foreground">{chat.timestamp}</span>
                         </div>
                         <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
@@ -268,7 +268,7 @@ const Chat = () => {
                       </Avatar>
                     )}
                     <div>
-                      <h3 className="font-semibold">{currentChat.title}</h3>
+                      <h3 className="font-semibold text-black">{currentChat.title}</h3>
                       <p className="text-sm text-muted-foreground">
                         {currentChat.participants.join(", ")}
                       </p>
