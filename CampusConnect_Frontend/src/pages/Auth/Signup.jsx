@@ -186,7 +186,9 @@ const Signup = () => {
               </div>
 
               <Button type="submit" className="btn-hero w-full">
+                <Link to="/home" className="w-full">
                 Create Account
+                </Link>
               </Button>
             </form>
 
