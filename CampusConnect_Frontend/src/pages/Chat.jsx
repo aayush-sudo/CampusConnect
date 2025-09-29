@@ -35,7 +35,7 @@ const Chat = () => {
       id: 2,
       title: "React Project Team",
       participants: ["Aditya Sontakke", "Aayush Hardas", "Anirudh Navdhuri"],
-      lastMessage: "I've pushed the latest changes to GitHub",
+      lastMessage: "I have pushed the latest changes to GitHub",
       timestamp: "1 hour ago",
       unread: 0,
       type: "group"
@@ -44,7 +44,7 @@ const Chat = () => {
       id: 3,
       title: "Aditya",
       participants: ["Aditya"],
-      lastMessage: "Thanks for helping with the algorithms!",
+      lastMessage: "Thanks for helping with the algorithms.",
       timestamp: "3 hours ago",
       unread: 1,
       type: "direct"
@@ -72,7 +72,7 @@ const Chat = () => {
     {
       id: 2,
       sender: "You",
-      content: "Yes! I'll be there. I've prepared some notes on neural networks.",
+      content: "Yes! I will be there. I have prepared some notes on neural networks.",
       timestamp: "10:32 AM",
       isCurrentUser: true,
       avatar: "/placeholder.svg"
@@ -80,7 +80,7 @@ const Chat = () => {
     {
       id: 3,
       sender: "Aayush Hardas",
-      content: "Perfect! I'm working on the data preprocessing part. Should we divide the topics?",
+      content: "Perfect! I am working on the data preprocessing part. Should we divide the topics?",
       timestamp: "10:35 AM",
       isCurrentUser: false,
       avatar: "/placeholder.svg"
