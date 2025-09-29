@@ -53,7 +53,7 @@ const Signup = () => {
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
                       id="firstName"
-                      placeholder="John"
+                      placeholder="First Name"
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       className="pl-10"
@@ -65,7 +65,7 @@ const Signup = () => {
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input
                     id="lastName"
-                    placeholder="Doe"
+                    placeholder="Last Name"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     required
@@ -80,7 +80,7 @@ const Signup = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john.doe@university.edu"
+                    placeholder="email@university.edu"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="pl-10"
