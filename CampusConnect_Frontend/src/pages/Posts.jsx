@@ -65,7 +65,7 @@ const Posts = () => {
     {
       id: 4,
       title: "Complete React.js Tutorial Series",
-      author: "Sarah Chen",
+      author: "Aayush Hardas",
       description: "Step-by-step guide to building modern web applications with React, including hooks and context.",
       category: "Programming",
       tags: ["react", "javascript", "web-development"],
@@ -78,7 +78,7 @@ const Posts = () => {
     {
       id: 5,
       title: "Linear Algebra Study Guide",
-      author: "Mike Johnson",
+      author: "Aditya Sontakke",
       description: "Essential concepts in linear algebra with solved examples and practice problems.",
       category: "Mathematics",
       tags: ["linear-algebra", "matrices", "vectors"],
@@ -91,7 +91,7 @@ const Posts = () => {
     {
       id: 6,
       title: "Psychology Research Methods Notes",
-      author: "Emma Davis",
+      author: "Anirudha Navuduri",
       description: "Comprehensive notes on research methodologies in psychology, including statistical analysis.",
       category: "Psychology",
       tags: ["research", "statistics", "psychology"],

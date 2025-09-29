@@ -19,7 +19,7 @@ const Dashboard = () => {
       title: "Looking for Machine Learning Study Partner",
       description: "Need someone to practice coding interviews and ML concepts with. Available weekends.",
       requester: {
-        name: "Alex Chen",
+        name: "Aayush Hardas",
         avatar: "/placeholder.svg",
         year: "3rd Year",
         major: "Computer Science"
@@ -36,7 +36,7 @@ const Dashboard = () => {
       title: "Need Data Structures Assignment Help",
       description: "Struggling with binary trees and graph algorithms. Looking for tutoring or study group.",
       requester: {
-        name: "Sarah Johnson",
+        name: "Aditya Sontakke",
         avatar: "/placeholder.svg",
         year: "2nd Year",
         major: "Computer Science"
@@ -53,7 +53,7 @@ const Dashboard = () => {
       title: "Organic Chemistry Lab Report Examples",
       description: "Looking for well-formatted lab report examples for organic chemistry course.",
       requester: {
-        name: "Mike Davis",
+        name: "Anirudha Navuduri",
         avatar: "/placeholder.svg",
         year: "2nd Year",
         major: "Chemistry"
@@ -70,7 +70,7 @@ const Dashboard = () => {
       title: "Linear Algebra Study Group",
       description: "Starting a study group for linear algebra. Meeting twice a week before midterm.",
       requester: {
-        name: "Emma Wilson",
+        name: "Arya Patil",
         avatar: "/placeholder.svg",
         year: "1st Year",
         major: "Mathematics"
@@ -87,7 +87,7 @@ const Dashboard = () => {
       title: "React.js Project Team Member Needed",
       description: "Working on a web app project for CS course. Need someone with React/Node.js experience.",
       requester: {
-        name: "David Kim",
+        name: "Aarush Jain",
         avatar: "/placeholder.svg",
         year: "3rd Year",
         major: "Computer Science"

@@ -52,21 +52,21 @@ const Homepage = () => {
     {
       id: 1,
       title: "Complete React.js Tutorial Series",
-      author: "Sarah Chen",
+      author: "Aayush Hardas",
       likes: 145,
       category: "Programming"
     },
     {
       id: 2,
       title: "Linear Algebra Study Guide",
-      author: "Mike Johnson",
+      author: "Aditya Sontakke",
       likes: 98,
       category: "Mathematics"
     },
     {
       id: 3,
       title: "Psychology Research Methods Notes",
-      author: "Emma Davis",
+      author: "Anirudh Navuduri",
       likes: 76,
       category: "Psychology"
     }
