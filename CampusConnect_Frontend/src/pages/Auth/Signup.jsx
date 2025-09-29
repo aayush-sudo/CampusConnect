@@ -26,14 +26,14 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="flex items-center justify-center space-x-2 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">CC</span>
+            <div className="w-10 h-10 flex items-center justify-center">
+              <span className="text-white font-bold"></span>
             </div>
-            <span className="text-2xl font-bold gradient-text">CampusConnect</span>
+            <span className="text-2xl font-bold gradient-text"></span>
           </Link>
           <h1 className="text-3xl font-bold mb-2">
             <span className="gradient-text">Join CampusConnect</span>

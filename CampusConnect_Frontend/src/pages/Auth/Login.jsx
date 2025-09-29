@@ -34,7 +34,7 @@ const Login = () => {
 
         <Card className="glass-card border-0">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center">Login</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -112,7 +112,7 @@ const Login = () => {
                   window.location.href = "/home";
                 }}
               >
-                Sign In
+                Login
               </Button>
             </form>
 
