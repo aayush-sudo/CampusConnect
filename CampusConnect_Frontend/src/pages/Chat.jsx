@@ -24,7 +24,7 @@ const Chat = () => {
   const chats = [
     {
       id: 1,
-      title: "Machine Learning Study Group",
+      title: "ML Study Group",
       participants: ["Aditya Sontakke", "Aayush Hardas", "Anirudh Navdhuri"],
       lastMessage: "Let's meet tomorrow at 3 PM",
       timestamp: "2 min ago",
@@ -129,7 +129,7 @@ const Chat = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex h-[calc(100vh-12rem)] glass-card border-0 rounded-xl overflow-hidden">
           {/* Sidebar */}
-          <div className="w-80 border-r border-border/50 flex flex-col">
+          <div className="w-110 border-r border-border/50 flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-border/50">
               <div className="flex items-center justify-between mb-4">
