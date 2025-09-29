@@ -15,7 +15,6 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Mock login - will integrate with backend later
     console.log("Login attempt:", formData);
   };
 
@@ -39,6 +38,21 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Username</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="firstName"
+                    type="firstName"
+                    placeholder="Enter your username"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -88,10 +102,17 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="btn-hero w-full">
-                <Link to="/home" className="w-full">
+              <Button
+                type="submit"
+                className="btn-hero w-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  localStorage.setItem("username", formData.firstName);
+                  localStorage.setItem("userLoginData", JSON.stringify(formData));
+                  window.location.href = "/home";
+                }}
+              >
                 Sign In
-                </Link>
               </Button>
             </form>
 

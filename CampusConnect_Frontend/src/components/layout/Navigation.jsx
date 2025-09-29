@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Plus, MessageSquare, Users, BookOpen, Bell, Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  
+  const [username, setUsername] = useState(localStorage.getItem("username"));
+
   const navItems = [
     { icon: Home, label: "Home", path: "/home" },
     { icon: Plus, label: "Request", path: "/request" },
@@ -18,6 +19,16 @@ const Navigation = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem("userName");
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   return (
     <nav className="glass-card fixed top-4 left-4 right-4 z-50 px-6 py-4">
@@ -49,14 +60,6 @@ const Navigation = () => {
 
         {/* Search and Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          {/*<div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search posts..."
-              className="pl-10 w-64 bg-black text-white placeholder-white border border-black/50 rounded-lg"
-            />
-          </div>*/}
-          
           <Button variant="ghost" size="icon" className="relative text-black">
             <Bell className="w-4 h-4" />
             <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-primary text-white">
@@ -64,9 +67,26 @@ const Navigation = () => {
             </Badge>
           </Button>
 
-          <Link to="/login">
-            <Button variant="outline" size="sm">Login</Button>
-          </Link>
+          {username ? (
+            <div className="flex items-center space-x-3">
+              <span className="ttext-3xl font-bold mb-2 gradient-text-green">Hello, {username}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  localStorage.removeItem("username");
+                  setUsername(null);
+                  window.location.href = "/";
+                }}
+              >
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm">Login</Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -100,9 +120,28 @@ const Navigation = () => {
               </Link>
             ))}
             <div className="pt-2 border-t border-border">
-              <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full">Login</Button>
-              </Link>
+              {username ? (
+                <div className="flex flex-col space-y-2">
+                  <span className="gradient-text-green">Hello, {username}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      localStorage.removeItem("username");
+                      setUsername(null);
+                      setIsMenuOpen(false);
+                      window.location.href = "/";
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full">Login</Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -22,7 +22,6 @@ const Signup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Mock signup - will integrate with backend later
     console.log("Signup attempt:", formData);
   };
 
@@ -36,7 +35,9 @@ const Signup = () => {
             </div>
             <span className="text-2xl font-bold gradient-text">CampusConnect</span>
           </Link>
-          <h1 className="text-3xl font-bold mb-2"><span className="gradient-text">Join CampusConnect</span></h1>
+          <h1 className="text-3xl font-bold mb-2">
+            <span className="gradient-text">Join CampusConnect</span>
+          </h1>
           <p className="text-muted-foreground">Create your account and start connecting</p>
         </div>
 
@@ -185,10 +186,17 @@ const Signup = () => {
                 </label>
               </div>
 
-              <Button type="submit" className="btn-hero w-full">
-                <Link to="/home" className="w-full">
+              <Button
+                type="submit"
+                className="btn-hero w-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  localStorage.setItem("username", formData.firstName);
+                  localStorage.setItem("userData", JSON.stringify(formData));
+                  window.location.href = "/home";
+                }}
+              >
                 Create Account
-                </Link>
               </Button>
             </form>
 
