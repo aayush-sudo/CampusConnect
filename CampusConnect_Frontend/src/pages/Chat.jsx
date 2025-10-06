@@ -236,9 +236,13 @@ const Chat = () => {
                           <h3 className="font-medium truncate text-black">{chat.title}</h3>
                           <span className="text-xs text-muted-foreground">{chat.timestamp}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
+                         <p
+                            className="text-muted-foreground truncate"
+                            style={{ color: 'hsl(240, 100%, 50%)' }}>
+                            {chat.lastMessage}
+                          </p>
                         <div className="flex items-center mt-1">
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-black">
                             {chat.participants.length} {chat.participants.length === 1 ? 'member' : 'members'}
                           </Badge>
                         </div>
@@ -270,6 +274,7 @@ const Chat = () => {
                     <div>
                       <h3 className="font-semibold text-black">{currentChat.title}</h3>
                       <p className="text-sm text-muted-foreground">
+
                         {currentChat.participants.join(", ")}
                       </p>
                     </div>
