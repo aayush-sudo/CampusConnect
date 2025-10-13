@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
     type: String,
     required: true,
     trim: true
@@ -13,6 +18,23 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    minlength: 3
+  },
+  university: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  major: {
+    type: String,
+    required: true,
+    trim: true
+  },
   password: {
     type: String,
     required: true,
@@ -21,14 +43,6 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: "/placeholder.svg"
-  },
-  year: {
-    type: String,
-    default: "1st Year"
-  },
-  major: {
-    type: String,
-    default: "Undeclared"
   }
 }, {
   timestamps: true
