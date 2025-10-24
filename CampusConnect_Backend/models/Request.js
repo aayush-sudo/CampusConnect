@@ -27,7 +27,7 @@ const requestSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Study Material', 'Study Partner', 'Project Team', 'Textbook', 'Tutoring', 'Study Group', 'Other']
+    enum: ['Study Material', 'Study Partner', 'Project Team', 'Textbook', 'Equipment', 'Tutoring', 'Study Group', 'Other']
   },
   urgency: {
     type: String,

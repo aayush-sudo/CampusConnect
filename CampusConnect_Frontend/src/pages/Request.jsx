@@ -12,6 +12,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { requestsAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
 
+
 const Request = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -25,8 +26,10 @@ const Request = () => {
     meetupLocation: ""
   });
 
+
   const { user } = useAuth();
   const { toast } = useToast();
+
 
   // Fetch user's requests on component mount
   useEffect(() => {
@@ -49,8 +52,10 @@ const Request = () => {
       }
     };
 
+
     fetchUserRequests();
   }, [user, toast]);
+
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,6 +63,7 @@ const Request = () => {
     const matchesFilter = filterStatus === "all" || request.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
@@ -71,15 +77,30 @@ const Request = () => {
       return;
     }
 
+    // Validate required fields
+    if (!newRequest.title || !newRequest.description || !newRequest.category || !newRequest.urgency) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+
     try {
       const requestData = {
         title: newRequest.title,
         description: newRequest.description,
+        requesterName: user.name || user.username || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous',
         category: newRequest.category,
         urgency: newRequest.urgency,
         location: newRequest.meetupLocation || "Not specified",
-        tags: [] // You can add tag functionality later
+        tags: []
       };
+
+      console.log('Sending request data:', requestData); // Debug log
+
 
       const response = await requestsAPI.createRequest(requestData);
       
@@ -87,6 +108,7 @@ const Request = () => {
         title: "Success",
         description: "Request created successfully!",
       });
+
 
       // Reset form
       setNewRequest({
@@ -97,19 +119,30 @@ const Request = () => {
         meetupLocation: ""
       });
 
+
       // Refresh requests list
       const updatedResponse = await requestsAPI.getUserRequests(user._id);
       setRequests(updatedResponse.data);
 
+
     } catch (error) {
       console.error('Error creating request:', error);
+      
+      // Better error messaging
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message || 
+                          "Failed to create request";
+      
+      console.log('Error details:', error.response?.data); // Debug log
+      
       toast({
         title: "Error",
-        description: "Failed to create request",
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
+
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
@@ -120,6 +153,7 @@ const Request = () => {
     }
   };
 
+
   const getCategoryIcon = (category) => {
     switch (category) {
       case "Study Material": return <BookOpen className="w-4 h-4" />;
@@ -129,6 +163,7 @@ const Request = () => {
       default: return <BookOpen className="w-4 h-4" />;
     }
   };
+
 
   return (
     <div className="min-h-screen pt-24 px-4 pb-8">
@@ -179,6 +214,7 @@ const Request = () => {
                   />
                 </div>
 
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
@@ -197,6 +233,7 @@ const Request = () => {
                     </Select>
                   </div>
 
+
                   <div className="space-y-2">
                     <Label htmlFor="urgency">Urgency</Label>
                     <Select value={newRequest.urgency} onValueChange={(value) => setNewRequest({ ...newRequest, urgency: value })}>
@@ -212,6 +249,7 @@ const Request = () => {
                   </div>
                 </div>
 
+
                 <div className="space-y-2">
                   <Label htmlFor="location">Preferred Meetup Location (Optional)</Label>
                   <Input
@@ -222,6 +260,7 @@ const Request = () => {
                   />
                 </div>
 
+
                 <Button type="submit" className="btn-hero w-full">
                   Create Request
                 </Button>
@@ -229,6 +268,7 @@ const Request = () => {
             </DialogContent>
           </Dialog>
         </div>
+
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -254,6 +294,7 @@ const Request = () => {
             </SelectContent>
           </Select>
         </div>
+
 
         {/* Requests List */}
         <div className="space-y-6">
@@ -297,7 +338,9 @@ const Request = () => {
                     </div>
                   </div>
 
+
                   <p className="text-muted-foreground mb-4">{request.description}</p>
+
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center space-x-4">
@@ -321,14 +364,6 @@ const Request = () => {
                   ? "Try adjusting your search or filters"
                   : "You haven't made any requests yet"}
               </p>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="btn-hero">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Request
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
             </div>
           )}
         </div>
@@ -336,5 +371,6 @@ const Request = () => {
     </div>
   );
 };
+
 
 export default Request;

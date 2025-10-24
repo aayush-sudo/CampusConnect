@@ -11,25 +11,37 @@ router.post('/requests', authenticateToken, async (req, res) => {
     const { title, description, category, urgency, location, tags } = req.body;
     const requesterId = req.user._id;
     
+    // Flexible requester name handling
+    const requesterName = req.body.requesterName || 
+                         `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() ||
+                         req.user.username || 
+                         req.user.name ||
+                         'Anonymous';
+    
     const request = new Request({
       title,
       description,
       requester: requesterId,
-      requesterName: `${req.user.firstName} ${req.user.lastName}`,
+      requesterName,
       requesterDetails: {
-        major: req.user.major,
-        avatar: req.user.avatar
+        year: req.user.year || '',
+        major: req.user.major || '',
+        avatar: req.user.avatar || ''
       },
       category,
       urgency,
-      location,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
+      location: location || "Not specified",
+      tags: tags || []
     });
     
     await request.save();
     res.status(201).json({ message: 'Request created successfully', request });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error creating request:', error);
+    res.status(400).json({ 
+      error: error.message,
+      details: error.errors
+    });
   }
 });
 
