@@ -19,6 +19,7 @@ const Dashboard = () => {
   const [activePopupId, setActivePopupId] = useState(null);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [stats, setStats] = useState({
     pendingRequests: 0,
     helpedToday: 0,
@@ -144,6 +145,55 @@ const Dashboard = () => {
         description: "Failed to start chat",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleFileUpload = async (requestId, file, fileType) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to respond to requests",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('requestId', requestId);
+      formData.append('userId', user._id);
+      formData.append('fileType', fileType);
+      formData.append('message', `Uploaded ${fileType}: ${file.name}`);
+
+      // Send response with file
+      const response = await requestsAPI.respondToRequest(requestId, {
+        userId: user._id,
+        message: `Uploaded ${fileType}: ${file.name}`,
+        file: file
+      });
+
+      toast({
+        title: "Success",
+        description: `${fileType} uploaded successfully!`,
+      });
+
+      // Close popup and refresh requests
+      setActivePopupId(null);
+      await fetchIncomingRequests();
+
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Error",
+        description: `Failed to upload ${fileType}`,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -360,35 +410,68 @@ const Dashboard = () => {
 
                           <div className="space-y-3 text-sm">
                             <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
-                              <input type="file" accept="image/*" className="hidden" id={`image-upload-${request._id}`} />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                id={`image-upload-${request._id}`}
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    handleFileUpload(request._id, file, 'Image');
+                                  }
+                                }}
+                                disabled={uploading}
+                              />
                               <label htmlFor={`image-upload-${request._id}`} className="flex items-center space-x-2">
                                 <span>📷</span>
-                                <span>Upload Image</span>
+                                <span>{uploading ? 'Uploading...' : 'Upload Image'}</span>
                               </label>
                             </label>
 
-
                             <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
-                              <input type="file" accept="video/*" className="hidden" id={`video-upload-${request._id}`} />
+                              <input 
+                                type="file" 
+                                accept="video/*" 
+                                className="hidden" 
+                                id={`video-upload-${request._id}`}
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    handleFileUpload(request._id, file, 'Video');
+                                  }
+                                }}
+                                disabled={uploading}
+                              />
                               <label htmlFor={`video-upload-${request._id}`} className="flex items-center space-x-2">
                                 <span>🎥</span>
-                                <span>Upload Video</span>
+                                <span>{uploading ? 'Uploading...' : 'Upload Video'}</span>
                               </label>
                             </label>
-
 
                             <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
-                              <input type="file" className="hidden" id={`file-upload-${request._id}`} />
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                id={`file-upload-${request._id}`}
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    handleFileUpload(request._id, file, 'File');
+                                  }
+                                }}
+                                disabled={uploading}
+                              />
                               <label htmlFor={`file-upload-${request._id}`} className="flex items-center space-x-2">
                                 <span>📁</span>
-                                <span>Upload File</span>
+                                <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
                               </label>
                             </label>
-
 
                             <button
                               onClick={() => setActivePopupId(null)}
                               className="mt-2 text-sm text-red-300 hover:text-red-100 transition-colors"
+                              disabled={uploading}
                             >
                               ✖ Cancel
                             </button>

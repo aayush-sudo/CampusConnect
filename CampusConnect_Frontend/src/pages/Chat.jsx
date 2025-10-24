@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Send, Search, MoreVertical, Phone, Video, Smile, Paperclip, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,119 +9,187 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "../contexts/AuthContext";
+import { chatsAPI } from "../services/api";
+import { authAPI } from "../services/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Chat = () => {
-  const [selectedChat, setSelectedChat] = useState(1);
+  const [selectedChat, setSelectedChat] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [chats, setChats] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newChatData, setNewChatData] = useState({
     participants: "",
     title: "",
     description: ""
   });
 
-  // Mock chat data
-  const chats = [
-    {
-      id: 1,
-      title: "ML Study Group",
-      participants: ["Aditya Sontakke", "Aayush Hardas", "Anirudh Navdhuri"],
-      lastMessage: "Let's meet tomorrow at 3 PM",
-      timestamp: "2 min ago",
-      unread: 2,
-      type: "group"
-    },
-    {
-      id: 2,
-      title: "React Project Team",
-      participants: ["Aditya Sontakke", "Aayush Hardas", "Anirudh Navdhuri"],
-      lastMessage: "I have pushed the latest changes to GitHub",
-      timestamp: "1 hour ago",
-      unread: 0,
-      type: "group"
-    },
-    {
-      id: 3,
-      title: "Aditya",
-      participants: ["Aditya"],
-      lastMessage: "Thanks for helping with the algorithms.",
-      timestamp: "3 hours ago",
-      unread: 1,
-      type: "direct"
-    },
-    {
-      id: 4,
-      title: "Calculus Help",
-      participants: ["Aayush", "Anirudh"],
-      lastMessage: "The derivative of that function would be...",
-      timestamp: "1 day ago",
-      unread: 0,
-      type: "group"
-    }
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const messages = [
-    {
-      id: 1,
-      sender: "Anirudh Navdhuri",
-      content: "Hey everyone! Are we still meeting tomorrow to go over the ML assignment?",
-      timestamp: "10:30 AM",
-      isCurrentUser: false,
-      avatar: "/placeholder.svg"
-    },
-    {
-      id: 2,
-      sender: "You",
-      content: "Yes! I will be there. I have prepared some notes on neural networks.",
-      timestamp: "10:32 AM",
-      isCurrentUser: true,
-      avatar: "/placeholder.svg"
-    },
-    {
-      id: 3,
-      sender: "Aayush Hardas",
-      content: "Perfect! I am working on the data preprocessing part. Should we divide the topics?",
-      timestamp: "10:35 AM",
-      isCurrentUser: false,
-      avatar: "/placeholder.svg"
-    },
-    {
-      id: 4,
-      sender: "Aayush Hardas",
-      content: "Great idea! I can cover the evaluation metrics section.",
-      timestamp: "10:38 AM",
-      isCurrentUser: false,
-      avatar: "/placeholder.svg"
-    },
-    {
-      id: 5,
-      sender: "You",
-      content: "Sounds like a plan! Let's meet at the library study room 204.",
-      timestamp: "10:40 AM",
-      isCurrentUser: true,
-      avatar: "/placeholder.svg"
-    }
-  ];
+  // Fetch user's chats on component mount
+  useEffect(() => {
+    const fetchUserChats = async () => {
+      if (user) {
+        try {
+          setLoading(true);
+          const response = await chatsAPI.getUserChats(user._id);
+          setChats(response.data);
+        } catch (error) {
+          console.error('Error fetching chats:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load chats",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserChats();
+  }, [user, toast]);
+
+  // Fetch messages when a chat is selected
+  useEffect(() => {
+    const fetchChatMessages = async () => {
+      if (selectedChat) {
+        try {
+          const response = await chatsAPI.getChatMessages(selectedChat._id);
+          setMessages(response.data);
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load messages",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    fetchChatMessages();
+  }, [selectedChat, toast]);
 
   const filteredChats = chats.filter(chat =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chat.participants.some(p => p.toLowerCase().includes(searchQuery.toLowerCase()))
+    chat.participants.some(p => p.userName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const currentChat = chats.find(chat => chat.id === selectedChat);
+  const currentChat = chats.find(chat => chat._id === selectedChat?._id);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      console.log("Sending message:", newMessage);
-      setNewMessage("");
+    if (newMessage.trim() && selectedChat) {
+      try {
+        const messageData = {
+          content: newMessage
+        };
+        
+        await chatsAPI.sendMessage(selectedChat._id, messageData);
+        
+        // Refresh messages
+        const messagesResponse = await chatsAPI.getChatMessages(selectedChat._id);
+        setMessages(messagesResponse.data);
+        
+        setNewMessage("");
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: error.response?.data?.error || "Failed to send message",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const handleCreateChat = (e) => {
+  const handleCreateChat = async (e) => {
     e.preventDefault();
-    console.log("Creating chat:", newChatData);
-    setNewChatData({ participants: "", title: "", description: "" });
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a chat",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Parse participant emails
+      const participantEmails = newChatData.participants
+        .split(',')
+        .map(email => email.trim())
+        .filter(email => email);
+
+      if (participantEmails.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please enter at least one participant email",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Look up users by email
+      const usersResponse = await authAPI.searchUsersByEmail(participantEmails);
+      const foundUsers = usersResponse.data;
+
+      if (foundUsers.length === 0) {
+        toast({
+          title: "Error",
+          description: "No users found with the provided emails",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if any emails were not found
+      const foundEmails = foundUsers.map(u => u.email);
+      const notFoundEmails = participantEmails.filter(email => !foundEmails.includes(email));
+      
+      if (notFoundEmails.length > 0) {
+        toast({
+          title: "Warning",
+          description: `Some users not found: ${notFoundEmails.join(', ')}`,
+          variant: "destructive",
+        });
+      }
+
+      // Create the chat with found user IDs
+      const chatData = {
+        title: newChatData.title,
+        description: newChatData.description,
+        participantIds: foundUsers.map(u => u._id),
+        type: foundUsers.length === 1 ? 'direct' : 'group'
+      };
+
+      const response = await chatsAPI.createChat(chatData);
+      
+      toast({
+        title: "Success",
+        description: `Chat created with ${foundUsers.length} participant(s)!`,
+      });
+
+      // Reset form
+      setNewChatData({ participants: "", title: "", description: "" });
+
+      // Refresh chats list
+      const updatedResponse = await chatsAPI.getUserChats(user._id);
+      setChats(updatedResponse.data);
+
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to create chat",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -202,50 +270,57 @@ const Chat = () => {
             {/* Chat List */}
             <ScrollArea className="flex-1">
               <div className="p-2">
-                {filteredChats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    onClick={() => setSelectedChat(chat.id)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 mb-2 ${
-                      selectedChat === chat.id
-                        ? "bg-primary/20 border border-primary/30"
-                        : "hover:bg-accent/50"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        {chat.type === "group" ? (
-                          <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
-                            <Users className="w-5 h-5 text-white" />
-                          </div>
-                        ) : (
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage src="/placeholder.svg" />
-                            <AvatarFallback>{chat.participants[0]?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                        )}
-                        {chat.unread > 0 && (
-                          <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-primary text-xs">
-                            {chat.unread}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium truncate text-black">{chat.title}</h3>
-                          <span className="text-xs text-muted-foreground">{chat.timestamp}</span>
+                {loading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <p className="text-muted-foreground">Loading chats...</p>
+                  </div>
+                ) : filteredChats.length === 0 ? (
+                  <div className="flex items-center justify-center p-4">
+                    <p className="text-muted-foreground">No chats found</p>
+                  </div>
+                ) : (
+                  filteredChats.map((chat) => (
+                    <div
+                      key={chat._id}
+                      onClick={() => setSelectedChat(chat)}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 mb-2 ${
+                        selectedChat?._id === chat._id
+                          ? "bg-primary/20 border border-primary/30"
+                          : "hover:bg-accent/50"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          {chat.type === "group" ? (
+                            <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+                              <Users className="w-5 h-5 text-white" />
+                            </div>
+                          ) : (
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src="/placeholder.svg" />
+                              <AvatarFallback>{chat.participants[0]?.userName?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
+                            </Avatar>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
-                        <div className="flex items-center mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {chat.participants.length} {chat.participants.length === 1 ? 'member' : 'members'}
-                          </Badge>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium truncate text-black">{chat.title}</h3>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(chat.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">{chat.description || 'No messages yet'}</p>
+                          <div className="flex items-center mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {chat.participants.length} {chat.participants.length === 1 ? 'member' : 'members'}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </ScrollArea>
           </div>
@@ -264,13 +339,13 @@ const Chat = () => {
                     ) : (
                       <Avatar className="w-10 h-10">
                         <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback>{currentChat.participants[0]?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback>{currentChat.participants[0]?.userName?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
                       </Avatar>
                     )}
                     <div>
                       <h3 className="font-semibold text-black">{currentChat.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {currentChat.participants.join(", ")}
+                        {currentChat.participants.map(p => p.userName).join(", ")}
                       </p>
                     </div>
                   </div>
@@ -291,39 +366,48 @@ const Chat = () => {
                 {/* Messages */}
                 <ScrollArea className="flex-1 p-4">
                   <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex items-start space-x-3 ${
-                          message.isCurrentUser ? "flex-row-reverse space-x-reverse" : ""
-                        }`}
-                      >
-                        {!message.isCurrentUser && (
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={message.avatar} />
-                            <AvatarFallback>{message.sender.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                        )}
-                        
-                        <div className={`max-w-xs lg:max-w-md ${message.isCurrentUser ? "ml-auto" : ""}`}>
-                          {!message.isCurrentUser && (
-                            <p className="text-xs font-medium text-muted-foreground mb-1">{message.sender}</p>
-                          )}
+                    {messages.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                      </div>
+                    ) : (
+                      messages.map((message) => {
+                        const isCurrentUser = message.sender === user._id;
+                        return (
                           <div
-                            className={`rounded-lg p-3 ${
-                              message.isCurrentUser
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                            key={message._id}
+                            className={`flex items-start space-x-3 ${
+                              isCurrentUser ? "flex-row-reverse space-x-reverse" : ""
                             }`}
                           >
-                            <p className="text-sm">{message.content}</p>
+                            {!isCurrentUser && (
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage src="/placeholder.svg" />
+                                <AvatarFallback>{message.senderName?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
+                              </Avatar>
+                            )}
+                            
+                            <div className={`max-w-xs lg:max-w-md ${isCurrentUser ? "ml-auto" : ""}`}>
+                              {!isCurrentUser && (
+                                <p className="text-xs font-medium text-muted-foreground mb-1">{message.senderName}</p>
+                              )}
+                              <div
+                                className={`rounded-lg p-3 ${
+                                  isCurrentUser
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted"
+                                }`}
+                              >
+                                <p className="text-sm">{message.content}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1 text-right">
+                                {new Date(message.createdAt).toLocaleTimeString()}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1 text-right">
-                            {message.timestamp}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })
+                    )}
                   </div>
                 </ScrollArea>
 

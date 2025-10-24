@@ -96,7 +96,8 @@ router.post('/chats/:id/messages', authenticateToken, async (req, res) => {
     }
     
     // Check if sender is a participant
-    const isParticipant = chat.participants.some(p => p.user.toString() === senderId);
+    const isParticipant = chat.participants.some(p => p.user.toString() === senderId.toString());
+    
     if (!isParticipant) {
       return res.status(403).json({ error: 'User is not a participant in this chat' });
     }
@@ -122,6 +123,7 @@ router.post('/chats/:id/messages', authenticateToken, async (req, res) => {
     
     res.json({ message: 'Message sent successfully', chat });
   } catch (error) {
+    console.error('Error in send message route:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -150,4 +150,24 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// Search users by email (for adding to chats)
+router.post('/users/search', authenticateToken, async (req, res) => {
+  try {
+    const { emails } = req.body;
+    
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+      return res.status(400).json({ error: 'Please provide an array of emails' });
+    }
+    
+    // Find users by email
+    const users = await User.find({
+      email: { $in: emails }
+    }).select('_id firstName lastName email avatar');
+    
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

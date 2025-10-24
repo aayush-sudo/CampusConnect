@@ -44,6 +44,7 @@ export const authAPI = {
   logout: () => api.post('/logout'),
   getProfile: () => api.get('/me'),
   updateProfile: (userData) => api.put('/profile', userData),
+  searchUsersByEmail: (emails) => api.post('/users/search', { emails }),
 };
 
 // Posts API
@@ -71,7 +72,22 @@ export const requestsAPI = {
   getAllRequests: (params = {}) => api.get('/requests', { params }),
   getUserRequests: (userId) => api.get(`/requests/user/${userId}`),
   createRequest: (requestData) => api.post('/requests', requestData),
-  respondToRequest: (requestId, responseData) => api.post(`/requests/${requestId}/respond`, responseData),
+  respondToRequest: (requestId, responseData) => {
+    if (responseData.file) {
+      // Handle file upload with FormData
+      const formData = new FormData();
+      formData.append('userId', responseData.userId);
+      formData.append('message', responseData.message);
+      formData.append('file', responseData.file);
+      
+      return api.post(`/requests/${requestId}/respond`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } else {
+      // Handle regular response without file
+      return api.post(`/requests/${requestId}/respond`, responseData);
+    }
+  },
   updateRequestStatus: (requestId, status) => api.patch(`/requests/${requestId}/status`, { status }),
   getRequestResponses: (requestId) => api.get(`/requests/${requestId}/responses`),
 };
