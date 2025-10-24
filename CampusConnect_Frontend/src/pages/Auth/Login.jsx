@@ -1,21 +1,57 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  
+  const from = location.state?.from?.pathname || "/home";
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
+    setLoading(true);
+    
+    try {
+      const result = await login(formData);
+      
+      if (result.success) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+        navigate(from, { replace: true });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,21 +74,6 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Username</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="firstName"
-                    type="firstName"
-                    placeholder="Enter your username"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -105,14 +126,9 @@ const Login = () => {
               <Button
                 type="submit"
                 className="btn-hero w-full"
-                onClick={(e) => {
-                  e.preventDefault();
-                  localStorage.setItem("username", formData.firstName);
-                  localStorage.setItem("userLoginData", JSON.stringify(formData));
-                  window.location.href = "/home";
-                }}
+                disabled={loading}
               >
-                Login
+                {loading ? "Signing in..." : "Login"}
               </Button>
             </form>
 

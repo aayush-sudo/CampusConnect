@@ -1,19 +1,15 @@
 import express from 'express';
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Create a new chat
-router.post('/chats', async (req, res) => {
+router.post('/chats', authenticateToken, async (req, res) => {
   try {
-    const { title, description, createdById, participantIds, type = 'group' } = req.body;
-    
-    // Get creator details
-    const creator = await User.findById(createdById);
-    if (!creator) {
-      return res.status(404).json({ error: 'Creator not found' });
-    }
+    const { title, description, participantIds, type = 'group' } = req.body;
+    const createdById = req.user._id;
     
     // Prepare participants array
     const participants = [];
@@ -21,7 +17,7 @@ router.post('/chats', async (req, res) => {
     // Add creator as first participant
     participants.push({
       user: createdById,
-      userName: `${creator.firstName} ${creator.lastName}`
+      userName: `${req.user.firstName} ${req.user.lastName}`
     });
     
     // Add other participants
@@ -89,14 +85,10 @@ router.get('/chats/:id', async (req, res) => {
 });
 
 // Send a message to chat
-router.post('/chats/:id/messages', async (req, res) => {
+router.post('/chats/:id/messages', authenticateToken, async (req, res) => {
   try {
-    const { senderId, content } = req.body;
-    
-    const sender = await User.findById(senderId);
-    if (!sender) {
-      return res.status(404).json({ error: 'Sender not found' });
-    }
+    const { content } = req.body;
+    const senderId = req.user._id;
     
     const chat = await Chat.findById(req.params.id);
     if (!chat) {
@@ -112,9 +104,9 @@ router.post('/chats/:id/messages', async (req, res) => {
     // Add message
     const message = {
       sender: senderId,
-      senderName: `${sender.firstName} ${sender.lastName}`,
+      senderName: `${req.user.firstName} ${req.user.lastName}`,
       content,
-      avatar: sender.avatar
+      avatar: req.user.avatar
     };
     
     chat.messages.push(message);
@@ -123,7 +115,7 @@ router.post('/chats/:id/messages', async (req, res) => {
     chat.lastMessage = {
       content,
       timestamp: new Date(),
-      sender: `${sender.firstName} ${sender.lastName}`
+      sender: `${req.user.firstName} ${req.user.lastName}`
     };
     
     await chat.save();

@@ -1,29 +1,26 @@
 import express from 'express';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
+import { authenticateToken } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
 // Create a new post
-router.post('/posts', async (req, res) => {
+router.post('/posts', authenticateToken, upload.single('file'), async (req, res) => {
   try {
-    const { title, description, category, tags, authorId, fileType, pdfPath } = req.body;
-    
-    // Get author details
-    const author = await User.findById(authorId);
-    if (!author) {
-      return res.status(404).json({ error: 'Author not found' });
-    }
+    const { title, description, category, tags, fileType } = req.body;
+    const authorId = req.user._id;
     
     const post = new Post({
       title,
       description,
       category,
-      tags: tags || [],
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       author: authorId,
-      authorName: `${author.firstName} ${author.lastName}`,
+      authorName: `${req.user.firstName} ${req.user.lastName}`,
       fileType: fileType || 'PDF',
-      pdfPath
+      pdfPath: req.file ? req.file.path : null
     });
     
     await post.save();

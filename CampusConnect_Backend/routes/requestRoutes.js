@@ -1,33 +1,29 @@
 import express from 'express';
 import Request from '../models/Request.js';
 import User from '../models/User.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Create a new request
-router.post('/requests', async (req, res) => {
+router.post('/requests', authenticateToken, async (req, res) => {
   try {
-    const { title, description, requesterId, category, urgency, location, tags } = req.body;
-    
-    // Get requester details
-    const requester = await User.findById(requesterId);
-    if (!requester) {
-      return res.status(404).json({ error: 'Requester not found' });
-    }
+    const { title, description, category, urgency, location, tags } = req.body;
+    const requesterId = req.user._id;
     
     const request = new Request({
       title,
       description,
       requester: requesterId,
-      requesterName: `${requester.firstName} ${requester.lastName}`,
+      requesterName: `${req.user.firstName} ${req.user.lastName}`,
       requesterDetails: {
-        major: requester.major,
-        avatar: requester.avatar
+        major: req.user.major,
+        avatar: req.user.avatar
       },
       category,
       urgency,
       location,
-      tags: tags || []
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
     });
     
     await request.save();

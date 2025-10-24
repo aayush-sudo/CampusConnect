@@ -1,28 +1,73 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
+    username: "",
     password: "",
     confirmPassword: "",
     university: "",
     major: ""
   });
+  
+  const { signup } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Signup attempt:", formData);
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { confirmPassword, ...signupData } = formData;
+      const result = await signup(signupData);
+      
+      if (result.success) {
+        toast({
+          title: "Account Created",
+          description: "Welcome to CampusConnect!",
+        });
+        navigate("/home");
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Signup Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,6 +129,21 @@ const Signup = () => {
                     placeholder="email@university.edu"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="username"
+                    placeholder="Choose a username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     className="pl-10"
                     required
                   />
@@ -189,14 +249,9 @@ const Signup = () => {
               <Button
                 type="submit"
                 className="btn-hero w-full"
-                onClick={(e) => {
-                  e.preventDefault();
-                  localStorage.setItem("username", formData.firstName);
-                  localStorage.setItem("userData", JSON.stringify(formData));
-                  window.location.href = "/home";
-                }}
+                disabled={loading}
               >
-                Create Account
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
 
