@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
+  const [activePopupId, setActivePopupId] = useState(null);
 
   // Mock incoming requests data
   const incomingRequests = [
@@ -148,7 +149,7 @@ const Dashboard = () => {
   };
 
   const handleRespond = (requestId) => {
-    console.log("Responding to request:", requestId);
+    setActivePopupId(activePopupId === requestId ? null : requestId);
     // Mock response - will integrate with backend later
   };
 
@@ -323,6 +324,7 @@ const Dashboard = () => {
                     <span>{request.timeAgo}</span>
                   </div>
                   
+                  <div className="relative">
                   <div className="flex items-center space-x-2">
                     <Button 
                       variant="outline" 
@@ -340,6 +342,48 @@ const Dashboard = () => {
                       Help Out
                     </Button>
                   </div>
+
+                  {activePopupId === request.id && (
+                <div className="absolute bottom-12 right-0 bg-gradient-to-tr from-blue-900 via-indigo-800 to-purple-800 text-white rounded-xl shadow-xl border border-white/20 p-4 w-72 transition-all duration-300 transform translate-y-2 opacity-100 z-50">
+                  <p className="font-semibold text-lg mb-3">Upload Your Response</p>
+
+                  <div className="space-y-3 text-sm">
+                    <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
+                      <input type="file" accept="image/*" className="hidden" id={`image-upload-${request.id}`} />
+                      <label htmlFor={`image-upload-${request.id}`} className="flex items-center space-x-2">
+                        <span>📷</span>
+                        <span>Upload Image</span>
+                      </label>
+                    </label>
+
+                    <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
+                      <input type="file" accept="video/*" className="hidden" id={`video-upload-${request.id}`} />
+                      <label htmlFor={`video-upload-${request.id}`} className="flex items-center space-x-2">
+                        <span>🎥</span>
+                        <span>Upload Video</span>
+                      </label>
+                    </label>
+
+                    <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
+                      <input type="file" className="hidden" id={`file-upload-${request.id}`} />
+                      <label htmlFor={`file-upload-${request.id}`} className="flex items-center space-x-2">
+                        <span>📁</span>
+                        <span>Upload File</span>
+                      </label>
+                    </label>
+
+                    <button
+                      onClick={() => setActivePopupId(null)}
+                      className="mt-2 text-sm text-red-300 hover:text-red-100 transition-colors"
+                    >
+                      ✖ Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+                </div>
+
                 </div>
               </CardContent>
             </Card>
