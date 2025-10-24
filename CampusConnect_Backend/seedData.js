@@ -98,7 +98,7 @@ const seedDatabase = async () => {
         tags: ['lab-report', 'template', 'physics'],
         author: createdUsers[1]._id,
         authorName: 'Aditya Sontakke',
-        fileType: 'DOCX',
+        fileType: 'DOC',
         likes: 18,
         downloads: 89,
         views: 210
@@ -122,7 +122,7 @@ const seedDatabase = async () => {
         tags: ['react', 'javascript', 'web-development'],
         author: createdUsers[0]._id,
         authorName: 'Aayush Hardas',
-        fileType: 'Video',
+        fileType: 'VIDEO',
         likes: 145,
         downloads: 567,
         views: 1240
@@ -142,7 +142,7 @@ const seedDatabase = async () => {
       {
         title: 'Psychology Research Methods Notes',
         description: 'Comprehensive notes on research methodologies in psychology, including statistical analysis.',
-        category: 'Psychology',
+        category: 'Other',
         tags: ['research', 'statistics', 'psychology'],
         author: createdUsers[2]._id,
         authorName: 'Anirudh Navuduri',

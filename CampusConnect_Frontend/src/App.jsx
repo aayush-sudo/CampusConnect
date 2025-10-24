@@ -18,50 +18,62 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Navigation />
-          <Routes>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/home" element={
-              <ProtectedRoute>
-                <Homepage />
-              </ProtectedRoute>
-            } />
-            <Route path="/request" element={
-              <ProtectedRoute>
-                <Request />
-              </ProtectedRoute>
-            } />
-            <Route path="/posts" element={
-              <ProtectedRoute>
-                <Posts />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/chat" element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  try {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Navigation />
+              <Routes>
+                <Route path="/" element={<Welcome />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/home" element={
+                  <ProtectedRoute>
+                    <Homepage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/request" element={
+                  <ProtectedRoute>
+                    <Request />
+                  </ProtectedRoute>
+                } />
+                <Route path="/posts" element={
+                  <ProtectedRoute>
+                    <Posts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/chat" element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  } catch (error) {
+    console.error('App Error:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>❌ App Error</h1>
+        <p>Error: {error.message}</p>
+        <p>Check console for details</p>
+      </div>
+    );
+  }
+};
 
 export default App;
