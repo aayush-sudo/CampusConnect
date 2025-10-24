@@ -70,6 +70,22 @@ router.get('/posts', async (req, res) => {
   }
 });
 
+// Get single post by ID
+router.get('/posts/:id', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate('author', 'firstName lastName avatar');
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get posts by user
 router.get('/posts/user/:userId', async (req, res) => {
   try {
@@ -83,16 +99,68 @@ router.get('/posts/user/:userId', async (req, res) => {
   }
 });
 
-// Like/Unlike a post
-router.post('/posts/:id/like', async (req, res) => {
+// NEW: Update a post (only by owner)
+router.put('/posts/:id', authenticateToken, upload.single('file'), async (req, res) => {
   try {
-    const { userId } = req.body;
     const post = await Post.findById(req.params.id);
     
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
     
+    // Check if user is the owner
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'You are not authorized to edit this post' });
+    }
+    
+    const { title, description, category, tags, fileType } = req.body;
+    
+    // Update fields
+    if (title) post.title = title;
+    if (description) post.description = description;
+    if (category) post.category = category;
+    if (tags) post.tags = tags.split(',').map(tag => tag.trim());
+    if (fileType) post.fileType = fileType;
+    if (req.file) post.pdfPath = req.file.path;
+    
+    await post.save();
+    res.json({ message: 'Post updated successfully', post });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// NEW: Delete a post (only by owner)
+router.delete('/posts/:id', authenticateToken, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    // Check if user is the owner
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'You are not authorized to delete this post' });
+    }
+    
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// IMPROVED: Like/Unlike a post (with authentication)
+router.post('/posts/:id/like', authenticateToken, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    const userId = req.user._id;
     const hasLiked = post.likedBy.includes(userId);
     
     if (hasLiked) {
@@ -106,7 +174,11 @@ router.post('/posts/:id/like', async (req, res) => {
     }
     
     await post.save();
-    res.json({ message: hasLiked ? 'Post unliked' : 'Post liked', likes: post.likes });
+    res.json({ 
+      message: hasLiked ? 'Post unliked' : 'Post liked', 
+      likes: post.likes,
+      hasLiked: !hasLiked 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -143,6 +215,30 @@ router.post('/posts/:id/view', async (req, res) => {
     await post.save();
     
     res.json({ message: 'View count updated', views: post.views });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//  NEW: Download file route
+router.get('/posts/:id/file', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    if (!post.pdfPath) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    
+    // This will trigger browser download
+    res.download(post.pdfPath, (err) => {
+      if (err) {
+        res.status(500).json({ error: 'Error downloading file' });
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
