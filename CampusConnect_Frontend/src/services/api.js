@@ -51,6 +51,8 @@ export const authAPI = {
 export const postsAPI = {
   getAllPosts: (params = {}) => api.get('/posts', { params }),
   getUserPosts: (userId) => api.get(`/posts/user/${userId}`),
+  getTrendingPosts: (limit = 10) => api.get('/posts/trending', { params: { limit } }),
+  getUserContributions: (userId, limit = 5) => api.get(`/posts/user/${userId}/contributions`, { params: { limit } }),
   createPost: (postData) => {
     const formData = new FormData();
     Object.keys(postData).forEach(key => {
@@ -71,12 +73,12 @@ export const postsAPI = {
 export const requestsAPI = {
   getAllRequests: (params = {}) => api.get('/requests', { params }),
   getUserRequests: (userId) => api.get(`/requests/user/${userId}`),
+  getUserRecentRequests: (userId, limit = 5) => api.get(`/requests/user/${userId}/recent`, { params: { limit } }),
   createRequest: (requestData) => api.post('/requests', requestData),
   respondToRequest: (requestId, responseData) => {
     if (responseData.file) {
       // Handle file upload with FormData
       const formData = new FormData();
-      formData.append('userId', responseData.userId);
       formData.append('message', responseData.message);
       formData.append('file', responseData.file);
       
@@ -107,6 +109,13 @@ export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getRecentRequests: (limit = 10) => api.get('/requests', { params: { limit } }),
   getRecentPosts: (limit = 10) => api.get('/posts', { params: { limit } }),
+};
+
+// Homepage API
+export const homepageAPI = {
+  getUserRecentRequests: (userId, limit = 5) => requestsAPI.getUserRecentRequests(userId, limit),
+  getTrendingPosts: (limit = 10) => postsAPI.getTrendingPosts(limit),
+  getUserContributions: (userId, limit = 5) => postsAPI.getUserContributions(userId, limit),
 };
 
 export default api;

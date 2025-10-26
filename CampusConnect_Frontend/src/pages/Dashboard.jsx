@@ -33,37 +33,38 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
 
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await requestsAPI.getAllRequests();
+      const allRequests = response.data.requests || [];
+      const otherUsersRequests = allRequests.filter(request => 
+        request.requester._id !== user._id
+      );
+      setIncomingRequests(otherUsersRequests);
+      const pendingCount = otherUsersRequests.filter(req => req.status === 'pending').length;
+      const totalResponses = otherUsersRequests.reduce((sum, req) => sum + (req.responseCount || 0), 0);
+      const responseRate = otherUsersRequests.length > 0 ? 
+        Math.round((totalResponses / otherUsersRequests.length) * 100) : 0;
+      setStats({
+        pendingRequests: pendingCount,
+        helpedToday: Math.floor(Math.random() * 10) + 1,
+        activeUsers: Math.floor(Math.random() * 50) + 100,
+        responseRate: responseRate
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await requestsAPI.getAllRequests();
-        const allRequests = response.data.requests || [];
-        const otherUsersRequests = allRequests.filter(request => 
-          request.requester._id !== user._id
-        );
-        setIncomingRequests(otherUsersRequests);
-        const pendingCount = otherUsersRequests.filter(req => req.status === 'pending').length;
-        const totalResponses = otherUsersRequests.reduce((sum, req) => sum + (req.responseCount || 0), 0);
-        const responseRate = otherUsersRequests.length > 0 ? 
-          Math.round((totalResponses / otherUsersRequests.length) * 100) : 0;
-        setStats({
-          pendingRequests: pendingCount,
-          helpedToday: Math.floor(Math.random() * 10) + 1,
-          activeUsers: Math.floor(Math.random() * 50) + 100,
-          responseRate: responseRate
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
 
 
     if (user) {
@@ -160,18 +161,9 @@ const Dashboard = () => {
 
     try {
       setUploading(true);
-      
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('requestId', requestId);
-      formData.append('userId', user._id);
-      formData.append('fileType', fileType);
-      formData.append('message', `Uploaded ${fileType}: ${file.name}`);
 
       // Send response with file
       const response = await requestsAPI.respondToRequest(requestId, {
-        userId: user._id,
         message: `Uploaded ${fileType}: ${file.name}`,
         file: file
       });
@@ -183,7 +175,8 @@ const Dashboard = () => {
 
       // Close popup and refresh requests
       setActivePopupId(null);
-      await fetchIncomingRequests();
+      // Refresh the dashboard data to show updated requests
+      await fetchDashboardData();
 
     } catch (error) {
       console.error('Error uploading file:', error);

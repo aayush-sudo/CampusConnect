@@ -6,6 +6,18 @@ import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
+// Helper function to calculate time ago
+function getTimeAgo(date) {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+}
+
 // Create a new post
 router.post('/posts', authenticateToken, upload.single('file'), async (req, res) => {
   try {
@@ -66,6 +78,77 @@ router.get('/posts', async (req, res) => {
       total
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get trending posts for homepage (MUST be before /posts/:id)
+router.get('/posts/trending', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    console.log('Fetching trending posts with limit:', limit);
+    
+    const posts = await Post.find({})
+      .populate('author', 'firstName lastName avatar')
+      .sort({ likes: -1, downloads: -1, createdAt: -1 })
+      .limit(parseInt(limit));
+    
+    console.log('Found posts:', posts.length);
+    
+    // Format for homepage display
+    const formattedPosts = posts.map(post => ({
+      id: post._id,
+      title: post.title,
+      author: post.authorName,
+      likes: post.likes || 0,
+      category: post.category,
+      timeAgo: getTimeAgo(post.createdAt),
+      downloads: post.downloads || 0,
+      views: post.views || 0
+    }));
+    
+    res.json(formattedPosts);
+  } catch (error) {
+    console.error('Error in getTrendingPosts:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's contributions for homepage (MUST be before /posts/:id)
+router.get('/posts/user/:userId/contributions', async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+    const userId = req.params.userId;
+    
+    console.log('Fetching contributions for user:', userId);
+    
+    // Validate userId format
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const posts = await Post.find({ author: userId })
+      .populate('author', 'firstName lastName avatar')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+    
+    console.log('Found contributions:', posts.length);
+    
+    // Format for homepage display
+    const formattedPosts = posts.map(post => ({
+      id: post._id,
+      title: post.title,
+      description: post.description,
+      likes: post.likes || 0,
+      downloads: post.downloads || 0,
+      timeAgo: getTimeAgo(post.createdAt),
+      category: post.category
+    }));
+    
+    res.json(formattedPosts);
+  } catch (error) {
+    console.error('Error in getUserContributions:', error);
     res.status(500).json({ error: error.message });
   }
 });

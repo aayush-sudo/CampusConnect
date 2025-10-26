@@ -5,6 +5,18 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Helper function to calculate time ago
+function getTimeAgo(date) {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+}
+
 // Create a new request
 router.post('/requests', authenticateToken, async (req, res) => {
   try {
@@ -109,9 +121,10 @@ router.get('/requests/user/:userId', async (req, res) => {
 });
 
 // Respond to a request
-router.post('/requests/:id/respond', async (req, res) => {
+router.post('/requests/:id/respond', authenticateToken, async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { message } = req.body;
+    const userId = req.user._id; // Get user from JWT token
     
     const user = await User.findById(userId);
     if (!user) {
@@ -135,6 +148,7 @@ router.post('/requests/:id/respond', async (req, res) => {
     
     res.json({ message: 'Response added successfully', request });
   } catch (error) {
+    console.error('Error responding to request:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -170,6 +184,45 @@ router.get('/requests/:id/responses', async (req, res) => {
     
     res.json(request.responses);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's recent requests for homepage
+router.get('/requests/user/:userId/recent', async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+    const userId = req.params.userId;
+    
+    console.log('Fetching recent requests for user:', userId);
+    
+    // Validate userId format
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const requests = await Request.find({ requester: userId })
+      .populate('requester', 'firstName lastName avatar major')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+    
+    console.log('Found requests:', requests.length);
+    
+    // Format for homepage display
+    const formattedRequests = requests.map(request => ({
+      id: request._id,
+      title: request.title,
+      description: request.description,
+      status: request.status,
+      responses: request.responseCount || 0,
+      timeAgo: getTimeAgo(request.createdAt),
+      category: request.category,
+      urgency: request.urgency
+    }));
+    
+    res.json(formattedRequests);
+  } catch (error) {
+    console.error('Error in getUserRecentRequests:', error);
     res.status(500).json({ error: error.message });
   }
 });
