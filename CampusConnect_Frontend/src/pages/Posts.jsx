@@ -13,7 +13,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 
+
 const API_URL = "http://localhost:5000/api";
+
 
 const Posts = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +41,7 @@ const Posts = () => {
     fileType: ""
   });
 
+
   const [editPost, setEditPost] = useState({
     title: "",
     description: "",
@@ -47,15 +50,18 @@ const Posts = () => {
     fileType: ""
   });
 
+
   // Get user from localStorage
   const getUserId = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     return user?._id;
   };
 
+
   const getAuthToken = () => {
     return localStorage.getItem('token');
   };
+
 
   // Fetch all posts
   const fetchAllPosts = async () => {
@@ -80,6 +86,7 @@ const Posts = () => {
     }
   };
 
+
   // Fetch user's posts
   const fetchUserPosts = async () => {
     const userId = getUserId();
@@ -101,16 +108,55 @@ const Posts = () => {
     }
   };
 
+
   // Initial load
   useEffect(() => {
     fetchAllPosts();
     fetchUserPosts();
   }, []);
 
+
   // Refresh when filter or search changes
   useEffect(() => {
     fetchAllPosts();
   }, [filterCategory, searchQuery]);
+
+
+  // ============================================
+  // STEP 2: NEW - Check for shared post in URL
+  // ============================================
+  useEffect(() => {
+    // Check if there's a postId in URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('postId');
+    
+    if (postId) {
+      // Find the post and open the view dialog
+      const findAndOpenPost = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/posts/${postId}`);
+          if (response.data) {
+            // Don't increment view count again, just open dialog
+            setSelectedPost(response.data);
+            setViewPostDialog(true);
+          }
+        } catch (error) {
+          console.error('Error loading shared post:', error);
+          toast({
+            title: "Error",
+            description: "Could not load the shared post",
+            variant: "destructive"
+          });
+        }
+      };
+      
+      findAndOpenPost();
+      
+      // Optional: Clean up URL after opening (removes the ?postId= from URL)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []); // Empty dependency array means this runs only once on mount
+
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -118,6 +164,7 @@ const Posts = () => {
       setSelectedFile(e.target.files[0]);
     }
   };
+
 
   // Create new post
   const handleCreatePost = async (e) => {
@@ -132,6 +179,7 @@ const Posts = () => {
       return;
     }
 
+
     try {
       const formData = new FormData();
       formData.append('title', newPost.title);
@@ -141,6 +189,7 @@ const Posts = () => {
       formData.append('fileType', newPost.fileType);
       formData.append('file', selectedFile);
 
+
       const token = getAuthToken();
       await axios.post(`${API_URL}/posts`, formData, {
         headers: {
@@ -149,10 +198,12 @@ const Posts = () => {
         }
       });
 
+
       toast({
         title: "Success",
         description: "Post created successfully!"
       });
+
 
       // Reset form
       setNewPost({
@@ -164,6 +215,7 @@ const Posts = () => {
       });
       setSelectedFile(null);
       setIsDialogOpen(false);
+
 
       // Refresh posts
       fetchAllPosts();
@@ -177,6 +229,7 @@ const Posts = () => {
       });
     }
   };
+
 
   // Edit post
   const handleEditPost = async (e) => {
@@ -193,6 +246,7 @@ const Posts = () => {
         formData.append('file', selectedFile);
       }
 
+
       const token = getAuthToken();
       await axios.put(`${API_URL}/posts/${postToEdit._id}`, formData, {
         headers: {
@@ -201,14 +255,17 @@ const Posts = () => {
         }
       });
 
+
       toast({
         title: "Success",
         description: "Post updated successfully!"
       });
 
+
       setSelectedFile(null);
       setIsEditDialogOpen(false);
       setPostToEdit(null);
+
 
       // Refresh posts
       fetchAllPosts();
@@ -223,6 +280,7 @@ const Posts = () => {
     }
   };
 
+
   // Delete post
   const handleDeletePost = async () => {
     try {
@@ -233,13 +291,16 @@ const Posts = () => {
         }
       });
 
+
       toast({
         title: "Success",
         description: "Post deleted successfully!"
       });
 
+
       setDeleteDialogOpen(false);
       setPostToDelete(null);
+
 
       // Refresh posts
       fetchAllPosts();
@@ -254,46 +315,6 @@ const Posts = () => {
     }
   };
 
-  // Like/Unlike post - UPDATED with authentication
-  const handleLike = async (postId) => {
-    const token = getAuthToken();
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "Please login to like posts",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/posts/${postId}/like`,
-        {}, // Empty body - user ID comes from token
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      toast({
-        title: "Success",
-        description: response.data.message
-      });
-
-      // Refresh posts
-      fetchAllPosts();
-      fetchUserPosts();
-    } catch (error) {
-      console.error("Error liking post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to like post",
-        variant: "destructive"
-      });
-    }
-  };
 
   // Download post - UPDATED to use new endpoint
   const handleDownload = async (postId, title) => {
@@ -304,10 +325,12 @@ const Posts = () => {
       // Use the file download route
       window.open(`${API_URL}/posts/${postId}/file`, '_blank');
 
+
       toast({
         title: "Success",
         description: "Download started!"
       });
+
 
       // Refresh posts to update count
       fetchAllPosts();
@@ -322,25 +345,6 @@ const Posts = () => {
     }
   };
 
-  // Share post
-  const handleShare = (post) => {
-    const shareUrl = window.location.href + `?post=${post._id}`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: post.title,
-        text: post.description,
-        url: shareUrl
-      }).catch(console.error);
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Success",
-        description: "Link copied to clipboard!"
-      });
-    }
-  };
 
   // View post details
   const handleViewPost = async (post) => {
@@ -358,6 +362,7 @@ const Posts = () => {
     }
   };
 
+
   // Open edit dialog
   const openEditDialog = (post) => {
     setPostToEdit(post);
@@ -371,11 +376,13 @@ const Posts = () => {
     setIsEditDialogOpen(true);
   };
 
+
   // Open delete dialog
   const openDeleteDialog = (post) => {
     setPostToDelete(post);
     setDeleteDialogOpen(true);
   };
+
 
   // Handle refresh
   const handleRefresh = () => {
@@ -386,6 +393,7 @@ const Posts = () => {
       description: "Posts have been refreshed"
     });
   };
+
 
   const getFileTypeColor = (fileType) => {
     switch (fileType?.toLowerCase()) {
@@ -399,126 +407,212 @@ const Posts = () => {
     }
   };
 
-  const PostCard = ({ post, showAuthor = true, isUserPost = false }) => (
-    <Card 
-      className="glass-card hover-lift border-0 cursor-pointer" 
-      onClick={() => handleViewPost(post)}
-    >
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
-              <BookOpen className="w-5 h-5" />
+
+  // ============================================
+  // UPDATED PostCard Component
+  // ============================================
+  const PostCard = ({ post, showAuthor = true, isUserPost = false }) => {
+    const { toast } = useToast();
+    const userId = getUserId();
+    const token = getAuthToken();
+
+    // NEW: Local state for likes (no page refresh needed)
+    const [likes, setLikes] = useState(post.likes || 0);
+    const [isLiked, setIsLiked] = useState(post.likedBy?.includes(userId) || false);
+    
+    // NEW: Local state for share feedback
+    const [copied, setCopied] = useState(false);
+
+    // NEW: Handle like/unlike without page refresh
+    const handleLikeClick = async () => {
+      if (!token) {
+        toast({
+          title: "Error",
+          description: "Please login to like posts",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Optimistic UI update
+      const originalLikes = likes;
+      const originalIsLiked = isLiked;
+
+      setLikes(isLiked ? likes - 1 : likes + 1);
+      setIsLiked(!isLiked);
+
+      try {
+        const response = await axios.post(
+          `${API_URL}/posts/${post._id}/like`,
+          {},
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        
+        // Sync with server response
+        setLikes(response.data.likes);
+        setIsLiked(response.data.hasLiked);
+      } catch (error) {
+        console.error("Error liking post:", error);
+        // Revert on error
+        setLikes(originalLikes);
+        setIsLiked(originalIsLiked);
+        toast({
+          title: "Error",
+          description: "Failed to like post",
+          variant: "destructive"
+        });
+      }
+    };
+
+    // NEW: Handle share with copy link
+    const handleShareClick = () => {
+      // Create URL with query parameter
+      const postUrl = `${window.location.origin}${window.location.pathname}?postId=${post._id}`;
+
+      navigator.clipboard.writeText(postUrl).then(() => {
+        setCopied(true);
+        toast({
+          title: "Success",
+          description: "Link copied to clipboard!"
+        });
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(err => {
+        console.error('Failed to copy link:', err);
+        toast({
+          title: "Error",
+          description: "Could not copy link",
+          variant: "destructive"
+        });
+      });
+    };
+
+
+    return (
+      <Card 
+        className="glass-card hover-lift border-0 cursor-pointer" 
+        onClick={() => handleViewPost(post)}
+      >
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-primary/20 rounded-lg">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-xl">{post.title}</h3>
+                <p className="text-muted-foreground">
+                  {showAuthor ? `by ${post.authorName}` : new Date(post.createdAt).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-xl">{post.title}</h3>
-              <p className="text-muted-foreground">
-                {showAuthor ? `by ${post.authorName}` : new Date(post.createdAt).toLocaleDateString()}
-              </p>
+            
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary">{post.category}</Badge>
+              <Badge className={getFileTypeColor(post.fileType)}>
+                {post.fileType}
+              </Badge>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary">{post.category}</Badge>
-            <Badge className={getFileTypeColor(post.fileType)}>
-              {post.fileType}
-            </Badge>
-          </div>
-        </div>
 
-        <p className="text-muted-foreground mb-4">{post.description}</p>
+          <p className="text-muted-foreground mb-4">{post.description}</p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
-          {post.tags?.map((tag, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              #{tag}
-            </Badge>
-          ))}
-        </div>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {post.tags?.map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                #{tag}
+              </Badge>
+            ))}
+          </div>
 
-        <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-            <span className="flex items-center">
-              <Heart className="w-4 h-4 mr-1" />
-              {post.likes || 0}
-            </span>
-            <span className="flex items-center">
-              <Download className="w-4 h-4 mr-1" />
-              {post.downloads || 0}
-            </span>
-            <span className="flex items-center">
-              <Eye className="w-4 h-4 mr-1" />
-              {post.views || 0}
-            </span>
+          <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+              <span className="flex items-center">
+                <Heart className={`w-4 h-4 mr-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                {likes}
+              </span>
+              <span className="flex items-center">
+                <Download className="w-4 h-4 mr-1" />
+                {post.downloads || 0}
+              </span>
+              <span className="flex items-center">
+                <Eye className="w-4 h-4 mr-1" />
+                {post.views || 0}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              {isUserPost ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditDialog(post);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDeleteDialog(post);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLikeClick();
+                    }}
+                  >
+                    <Heart className={`w-4 h-4 mr-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                    {isLiked ? 'Unlike' : 'Like'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(post._id, post.title);
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Download
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShareClick();
+                    }}
+                  >
+                    <Share2 className="w-4 h-4 mr-1" />
+                    {copied ? 'Copied!' : 'Share'}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {isUserPost ? (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEditDialog(post);
-                  }}
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDeleteDialog(post);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Delete
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleLike(post._id);
-                  }}
-                >
-                  <Heart className="w-4 h-4 mr-1" />
-                  Like
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownload(post._id, post.title);
-                  }}
-                >
-                  <Download className="w-4 h-4 mr-1" />
-                  Download
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShare(post);
-                  }}
-                >
-                  <Share2 className="w-4 h-4 mr-1" />
-                  Share
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
+
 
   return (
     <div className="min-h-screen pt-24 px-4 pb-8">
@@ -929,14 +1023,43 @@ const Posts = () => {
                   </Button>
                   <Button 
                     variant="outline"
-                    onClick={() => handleLike(selectedPost._id)}
+                    onClick={() => {
+                      const token = getAuthToken();
+                      if (!token) {
+                        toast({
+                          title: "Error",
+                          description: "Please login to like posts",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      axios.post(`${API_URL}/posts/${selectedPost._id}/like`, {}, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      }).then(() => {
+                        toast({ title: "Success", description: "Post liked!" });
+                        fetchAllPosts();
+                        fetchUserPosts();
+                      }).catch(() => {
+                        toast({ title: "Error", description: "Failed to like post", variant: "destructive" });
+                      });
+                    }}
                   >
                     <Heart className="w-4 h-4 mr-2" />
                     Like
                   </Button>
+                  {/* ============================================ */}
+                  {/* STEP 3: UPDATED Share button in dialog */}
+                  {/* ============================================ */}
                   <Button 
                     variant="outline"
-                    onClick={() => handleShare(selectedPost)}
+                    onClick={() => {
+                      const postUrl = `${window.location.origin}${window.location.pathname}?postId=${selectedPost._id}`;
+                      navigator.clipboard.writeText(postUrl).then(() => {
+                        toast({ title: "Success", description: "Link copied to clipboard!" });
+                      }).catch(() => {
+                        toast({ title: "Error", description: "Could not copy link", variant: "destructive" });
+                      });
+                    }}
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
@@ -950,5 +1073,6 @@ const Posts = () => {
     </div>
   );
 };
+
 
 export default Posts;
