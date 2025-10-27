@@ -75,6 +75,33 @@ const Chat = () => {
     fetchChatMessages();
   }, [selectedChat, toast]);
 
+  // Poll for new messages every 1 second when a chat is selected
+  useEffect(() => {
+    let intervalId;
+    
+    if (selectedChat) {
+      const pollMessages = async () => {
+        try {
+          const response = await chatsAPI.getChatMessages(selectedChat._id);
+          setMessages(response.data);
+        } catch (error) {
+          console.error('Error polling messages:', error);
+          // Don't show toast for polling errors to avoid spam
+        }
+      };
+
+      // Set up interval to poll every 1 second
+      intervalId = setInterval(pollMessages, 1000);
+    }
+
+    // Cleanup interval on unmount or when selectedChat changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [selectedChat]);
+
   const filteredChats = chats.filter(chat =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     chat.participants.some(p => p.userName.toLowerCase().includes(searchQuery.toLowerCase()))
