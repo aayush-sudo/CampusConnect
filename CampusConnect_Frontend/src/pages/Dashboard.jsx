@@ -422,15 +422,31 @@ const Dashboard = () => {
                       </div>
 
                       {activePopupId === request._id && (
-                        <div className="absolute bottom-12 right-0 bg-gradient-to-tr from-blue-900 via-indigo-800 to-purple-800 text-white rounded-xl shadow-xl border border-white/20 p-4 w-72 transition-all duration-300 transform translate-y-2 opacity-100 z-50">
-                          <p className="font-semibold text-lg mb-3">Upload Your Response</p>
+                        <div className="absolute bottom-12 right-0 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80 transition-all duration-300 transform translate-y-2 opacity-100 z-50 backdrop-blur-sm">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-xl text-gray-900 dark:text-white">
+                              Upload Response
+                            </h3>
+                            <button
+                              onClick={() => setActivePopupId(null)}
+                              disabled={uploading}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            >
+                              <span className="text-2xl">×</span>
+                            </button>
+                          </div>
 
-                          <div className="space-y-3 text-sm">
-                            <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Choose a file type to upload your response
+                          </p>
+
+                          <div className="space-y-3">
+                            {/* Image Upload */}
+                            <label className="block">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
                                 id={`image-upload-${request._id}`}
                                 onChange={(e) => {
                                   const file = e.target.files[0];
@@ -440,17 +456,33 @@ const Dashboard = () => {
                                 }}
                                 disabled={uploading}
                               />
-                              <label htmlFor={`image-upload-${request._id}`} className="flex items-center space-x-2">
-                                <span>📷</span>
-                                <span>{uploading ? 'Uploading...' : 'Upload Image'}</span>
+                              <label
+                                htmlFor={`image-upload-${request._id}`}
+                                className={`flex items-center space-x-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${uploading
+                                    ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 cursor-not-allowed opacity-60'
+                                    : 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950 hover:border-blue-400 hover:bg-blue-100 dark:hover:border-blue-700 dark:hover:bg-blue-900 hover:shadow-md'
+                                  }`}
+                              >
+                                <div className="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                  <span className="text-2xl">📷</span>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 dark:text-white">
+                                    {uploading ? 'Uploading...' : 'Upload Image'}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    JPG, PNG, GIF
+                                  </p>
+                                </div>
                               </label>
                             </label>
 
-                            <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
-                              <input 
-                                type="file" 
-                                accept="video/*" 
-                                className="hidden" 
+                            {/* Video Upload */}
+                            <label className="block">
+                              <input
+                                type="file"
+                                accept="video/*"
+                                className="hidden"
                                 id={`video-upload-${request._id}`}
                                 onChange={(e) => {
                                   const file = e.target.files[0];
@@ -460,16 +492,32 @@ const Dashboard = () => {
                                 }}
                                 disabled={uploading}
                               />
-                              <label htmlFor={`video-upload-${request._id}`} className="flex items-center space-x-2">
-                                <span>🎥</span>
-                                <span>{uploading ? 'Uploading...' : 'Upload Video'}</span>
+                              <label
+                                htmlFor={`video-upload-${request._id}`}
+                                className={`flex items-center space-x-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${uploading
+                                    ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 cursor-not-allowed opacity-60'
+                                    : 'border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950 hover:border-purple-400 hover:bg-purple-100 dark:hover:border-purple-700 dark:hover:bg-purple-900 hover:shadow-md'
+                                  }`}
+                              >
+                                <div className="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                                  <span className="text-2xl">🎥</span>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 dark:text-white">
+                                    {uploading ? 'Uploading...' : 'Upload Video'}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    MP4, MOV, AVI
+                                  </p>
+                                </div>
                               </label>
                             </label>
 
-                            <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
-                              <input 
-                                type="file" 
-                                className="hidden" 
+                            {/* File Upload */}
+                            <label className="block">
+                              <input
+                                type="file"
+                                className="hidden"
                                 id={`file-upload-${request._id}`}
                                 onChange={(e) => {
                                   const file = e.target.files[0];
@@ -479,22 +527,37 @@ const Dashboard = () => {
                                 }}
                                 disabled={uploading}
                               />
-                              <label htmlFor={`file-upload-${request._id}`} className="flex items-center space-x-2">
-                                <span>📁</span>
-                                <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
+                              <label
+                                htmlFor={`file-upload-${request._id}`}
+                                className={`flex items-center space-x-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${uploading
+                                    ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 cursor-not-allowed opacity-60'
+                                    : 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 hover:border-green-400 hover:bg-green-100 dark:hover:border-green-700 dark:hover:bg-green-900 hover:shadow-md'
+                                  }`}
+                              >
+                                <div className="flex-shrink-0 w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                                  <span className="text-2xl">📁</span>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 dark:text-white">
+                                    {uploading ? 'Uploading...' : 'Upload File'}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    PDF, DOC, TXT
+                                  </p>
+                                </div>
                               </label>
                             </label>
-
-                            <button
-                              onClick={() => setActivePopupId(null)}
-                              className="mt-2 text-sm text-red-300 hover:text-red-100 transition-colors"
-                              disabled={uploading}
-                            >
-                              ✖ Cancel
-                            </button>
                           </div>
+
+                          {uploading && (
+                            <div className="mt-4 flex items-center justify-center space-x-2 text-blue-600 dark:text-blue-400">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                              <span className="text-sm font-medium">Uploading...</span>
+                            </div>
+                          )}
                         </div>
                       )}
+
                     </div>
                   </div>
                 </CardContent>
