@@ -51,12 +51,6 @@ const Navigation = () => {
 
         {/* Search and Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative text-black">
-            <Bell className="w-4 h-4" />
-            <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-primary text-white">
-              3
-            </Badge>
-          </Button>
 
           {user ? (
             <div className="flex items-center space-x-3">
