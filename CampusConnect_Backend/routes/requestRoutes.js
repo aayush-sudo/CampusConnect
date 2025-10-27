@@ -3,7 +3,9 @@ import Request from '../models/Request.js';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
 
+
 const router = express.Router();
+
 
 // Helper function to calculate time ago
 function getTimeAgo(date) {
@@ -16,6 +18,7 @@ function getTimeAgo(date) {
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
   return `${Math.floor(diffInSeconds / 2592000)} months ago`;
 }
+
 
 // Create a new request
 router.post('/requests', authenticateToken, async (req, res) => {
@@ -56,6 +59,7 @@ router.post('/requests', authenticateToken, async (req, res) => {
     });
   }
 });
+
 
 // Get all requests
 router.get('/requests', async (req, res) => {
@@ -107,6 +111,7 @@ router.get('/requests', async (req, res) => {
   }
 });
 
+
 // Get requests by user
 router.get('/requests/user/:userId', async (req, res) => {
   try {
@@ -120,7 +125,9 @@ router.get('/requests/user/:userId', async (req, res) => {
   }
 });
 
+
 // Respond to a request
+// UPDATED: Now increments user's requestsResponded count
 router.post('/requests/:id/respond', authenticateToken, async (req, res) => {
   try {
     const { message } = req.body;
@@ -146,12 +153,21 @@ router.post('/requests/:id/respond', authenticateToken, async (req, res) => {
     request.responseCount = request.responses.length;
     await request.save();
     
-    res.json({ message: 'Response added successfully', request });
+    // NEW: Increment user's requestsResponded count
+    user.requestsResponded = (user.requestsResponded || 0) + 1;
+    await user.save();
+    
+    res.json({ 
+      message: 'Response added successfully', 
+      request,
+      requestsResponded: user.requestsResponded 
+    });
   } catch (error) {
     console.error('Error responding to request:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Update request status
 router.patch('/requests/:id/status', async (req, res) => {
@@ -172,6 +188,7 @@ router.patch('/requests/:id/status', async (req, res) => {
   }
 });
 
+
 // Get request responses
 router.get('/requests/:id/responses', async (req, res) => {
   try {
@@ -187,6 +204,7 @@ router.get('/requests/:id/responses', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Get user's recent requests for homepage
 router.get('/requests/user/:userId/recent', async (req, res) => {
@@ -226,5 +244,6 @@ router.get('/requests/user/:userId/recent', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 export default router;

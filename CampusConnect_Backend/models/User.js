@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -43,10 +44,16 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: "/placeholder.svg"
+  },
+  // NEW FIELD: Track number of requests user has responded to
+  requestsResponded: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
+
 
 const User = mongoose.model('User', userSchema);
 export default User;

@@ -10,7 +10,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { requestsAPI, chatsAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
+const API_URL = "http://localhost:5000/api";
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,34 +24,68 @@ const Dashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [stats, setStats] = useState({
     pendingRequests: 0,
-    helpedToday: 0,
-    activeUsers: 0,
+    requestsResponded: 0, // Changed from helpedToday
+    totalUsers: 0, // Changed from activeUsers
     responseRate: 0
   });
-
 
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Fetch total user count
+  const fetchTotalUsers = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/users/count`);
+      return response.data.count;
+    } catch (error) {
+      console.error('Error fetching total users:', error);
+      return 0;
+    }
+  };
+
+  // Fetch current user's requests responded count
+  const fetchRequestsResponded = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/users/me/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      return response.data.requestsResponded;
+    } catch (error) {
+      console.error('Error fetching requests responded:', error);
+      return 0;
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // Fetch requests
       const response = await requestsAPI.getAllRequests();
       const allRequests = response.data.requests || [];
       const otherUsersRequests = allRequests.filter(request => 
         request.requester._id !== user._id
       );
       setIncomingRequests(otherUsersRequests);
+      
+      // Calculate stats
       const pendingCount = otherUsersRequests.filter(req => req.status === 'pending').length;
       const totalResponses = otherUsersRequests.reduce((sum, req) => sum + (req.responseCount || 0), 0);
       const responseRate = otherUsersRequests.length > 0 ? 
         Math.round((totalResponses / otherUsersRequests.length) * 100) : 0;
+      
+      // Fetch total users and user's requests responded
+      const [totalUsers, requestsResponded] = await Promise.all([
+        fetchTotalUsers(),
+        fetchRequestsResponded()
+      ]);
+      
       setStats({
         pendingRequests: pendingCount,
-        helpedToday: Math.floor(Math.random() * 10) + 1,
-        activeUsers: Math.floor(Math.random() * 50) + 100,
+        requestsResponded: requestsResponded,
+        totalUsers: totalUsers,
         responseRate: responseRate
       });
     } catch (error) {
@@ -65,13 +101,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-
-
     if (user) {
       fetchDashboardData();
     }
   }, [user, toast]);
-
 
   const filteredRequests = incomingRequests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -98,7 +131,6 @@ const Dashboard = () => {
     return matchesSearch && matchesCategory && matchesTime;
   });
 
-
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
       case "high": return "bg-red-500/20 text-red-400 border-red-500/30";
@@ -107,7 +139,6 @@ const Dashboard = () => {
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
-
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -119,11 +150,9 @@ const Dashboard = () => {
     }
   };
 
-
   const handleRespond = (requestId) => {
     setActivePopupId(activePopupId === requestId ? null : requestId);
   };
-
 
   const handleChatWithUser = async (request) => {
     try {
@@ -168,6 +197,12 @@ const Dashboard = () => {
         file: file
       });
 
+      // Increment the local count immediately for better UX
+      setStats(prevStats => ({
+        ...prevStats,
+        requestsResponded: prevStats.requestsResponded + 1
+      }));
+
       toast({
         title: "Success",
         description: `${fileType} uploaded successfully!`,
@@ -190,7 +225,6 @@ const Dashboard = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen pt-24 px-4 pb-8">
       <div className="max-w-7xl mx-auto">
@@ -200,7 +234,6 @@ const Dashboard = () => {
             Help your fellow students by responding to their requests
           </p>
         </div>
-
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="glass-card border-0">
@@ -217,7 +250,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-
+          {/* UPDATED: Requests Responded */}
           <Card className="glass-card border-0">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -225,14 +258,14 @@ const Dashboard = () => {
                   <CheckCircle className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Helped Today</p>
-                  <p className="text-2xl font-bold">{stats.helpedToday}</p>
+                  <p className="text-sm text-muted-foreground">Requests Responded</p>
+                  <p className="text-2xl font-bold">{stats.requestsResponded}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-
+          {/* UPDATED: No. of Users */}
           <Card className="glass-card border-0">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -240,13 +273,12 @@ const Dashboard = () => {
                   <Users className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Users</p>
-                  <p className="text-2xl font-bold">{stats.activeUsers}</p>
+                  <p className="text-sm text-muted-foreground">No. of Users</p>
+                  <p className="text-2xl font-bold">{stats.totalUsers}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
 
           <Card className="glass-card border-0">
             <CardContent className="p-6">
@@ -262,7 +294,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
-
 
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
@@ -289,7 +320,6 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
 
-
           <Select value={timeFilter} onValueChange={setTimeFilter}>
             <SelectTrigger className="w-32 glass-card border-0">
               <Calendar className="w-4 h-4 mr-2" />
@@ -303,7 +333,6 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
         </div>
-
 
         <div className="space-y-6">
           {loading ? (
@@ -346,9 +375,7 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-
                   <p className="text-muted-foreground mb-4">{request.description}</p>
-
 
                   {request.tags && request.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -359,7 +386,6 @@ const Dashboard = () => {
                       ))}
                     </div>
                   )}
-
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-6 text-sm text-muted-foreground">
@@ -395,11 +421,9 @@ const Dashboard = () => {
                         </Button>
                       </div>
 
-
                       {activePopupId === request._id && (
                         <div className="absolute bottom-12 right-0 bg-gradient-to-tr from-blue-900 via-indigo-800 to-purple-800 text-white rounded-xl shadow-xl border border-white/20 p-4 w-72 transition-all duration-300 transform translate-y-2 opacity-100 z-50">
                           <p className="font-semibold text-lg mb-3">Upload Your Response</p>
-
 
                           <div className="space-y-3 text-sm">
                             <label className="block cursor-pointer hover:text-indigo-300 transition-colors">
@@ -486,6 +510,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
 
 export default Dashboard;

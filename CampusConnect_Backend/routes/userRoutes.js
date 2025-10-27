@@ -3,7 +3,9 @@ import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import { authenticateToken, generateToken } from '../middleware/auth.js';
 
+
 const router = express.Router();
+
 
 // Signup route
 router.post('/signup', async (req, res) => {
@@ -54,6 +56,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
+
 // Login route
 router.post('/login', async (req, res) => {
   try {
@@ -90,6 +93,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
 // Get user profile
 router.get('/profile/:id', async (req, res) => {
   try {
@@ -105,6 +109,7 @@ router.get('/profile/:id', async (req, res) => {
   }
 });
 
+
 // Get current user profile (authenticated)
 router.get('/me', authenticateToken, async (req, res) => {
   try {
@@ -114,12 +119,14 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
+
 // Logout route
 router.post('/logout', (req, res) => {
   // Since we're using JWT, logout is handled on the client side
   // by removing the token from localStorage
   res.json({ message: 'Logged out successfully' });
 });
+
 
 // Update user profile
 router.put('/profile', authenticateToken, async (req, res) => {
@@ -150,6 +157,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+
 // Search users by email (for adding to chats)
 router.post('/users/search', authenticateToken, async (req, res) => {
   try {
@@ -169,5 +177,43 @@ router.post('/users/search', authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+// ============================================
+// NEW ROUTES FOR DASHBOARD STATS
+// ============================================
+
+// Get total user count
+router.get('/users/count', async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current user's requests responded count
+router.get('/users/me/stats', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('requestsResponded');
+    res.json({ requestsResponded: user.requestsResponded || 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Increment user's requests responded count (optional manual endpoint)
+router.post('/users/me/increment-responses', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.requestsResponded = (user.requestsResponded || 0) + 1;
+    await user.save();
+    res.json({ requestsResponded: user.requestsResponded });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 export default router;
