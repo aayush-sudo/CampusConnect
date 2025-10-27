@@ -38,9 +38,9 @@ const Homepage = () => {
         console.log('Fetching homepage data for user:', user._id);
         
         const [requestsResponse, contributionsResponse, trendingResponse] = await Promise.all([
-          homepageAPI.getUserRecentRequests(user._id, 5),
-          homepageAPI.getUserContributions(user._id, 5),
-          homepageAPI.getTrendingPosts(10)
+          homepageAPI.getUserRecentRequests(user._id, 2),
+          homepageAPI.getUserContributions(user._id, 2),
+          homepageAPI.getTrendingPosts(4)
         ]);
         
         console.log('API responses:', {
