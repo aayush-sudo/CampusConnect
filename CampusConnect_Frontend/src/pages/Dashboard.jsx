@@ -12,7 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+
 const API_URL = "http://localhost:5000/api";
+
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,9 +31,11 @@ const Dashboard = () => {
     responseRate: 0
   });
 
+
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
 
   // Fetch total user count
   const fetchTotalUsers = async () => {
@@ -43,6 +47,7 @@ const Dashboard = () => {
       return 0;
     }
   };
+
 
   // Fetch current user's requests responded count
   const fetchRequestsResponded = async () => {
@@ -57,6 +62,7 @@ const Dashboard = () => {
       return 0;
     }
   };
+
 
   const fetchDashboardData = async () => {
     try {
@@ -100,11 +106,13 @@ const Dashboard = () => {
     }
   };
 
+
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
   }, [user, toast]);
+
 
   const filteredRequests = incomingRequests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -131,6 +139,7 @@ const Dashboard = () => {
     return matchesSearch && matchesCategory && matchesTime;
   });
 
+
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
       case "high": return "bg-red-500/20 text-red-400 border-red-500/30";
@@ -139,6 +148,7 @@ const Dashboard = () => {
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
+
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -150,9 +160,11 @@ const Dashboard = () => {
     }
   };
 
+
   const handleRespond = (requestId) => {
     setActivePopupId(activePopupId === requestId ? null : requestId);
   };
+
 
   const handleChatWithUser = async (request) => {
     try {
@@ -178,6 +190,10 @@ const Dashboard = () => {
     }
   };
 
+
+  // ============================================
+  // UPDATED: File upload handler
+  // ============================================
   const handleFileUpload = async (requestId, file, fileType) => {
     if (!user) {
       toast({
@@ -191,10 +207,10 @@ const Dashboard = () => {
     try {
       setUploading(true);
 
-      // Send response with file
+      // Use the API service which already handles FormData correctly
       const response = await requestsAPI.respondToRequest(requestId, {
         message: `Uploaded ${fileType}: ${file.name}`,
-        file: file
+        file: file  // Pass the file object directly
       });
 
       // Increment the local count immediately for better UX
@@ -217,13 +233,14 @@ const Dashboard = () => {
       console.error('Error uploading file:', error);
       toast({
         title: "Error",
-        description: `Failed to upload ${fileType}`,
+        description: error.response?.data?.error || `Failed to upload ${fileType}`,
         variant: "destructive",
       });
     } finally {
       setUploading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen pt-24 px-4 pb-8">
@@ -234,6 +251,7 @@ const Dashboard = () => {
             Help your fellow students by responding to their requests
           </p>
         </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="glass-card border-0">
@@ -250,6 +268,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
+
           {/* UPDATED: Requests Responded */}
           <Card className="glass-card border-0">
             <CardContent className="p-6">
@@ -264,6 +283,7 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+
 
           {/* UPDATED: No. of Users */}
           <Card className="glass-card border-0">
@@ -280,6 +300,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
+
           <Card className="glass-card border-0">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -294,6 +315,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
 
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
@@ -320,6 +342,7 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
 
+
           <Select value={timeFilter} onValueChange={setTimeFilter}>
             <SelectTrigger className="w-32 glass-card border-0">
               <Calendar className="w-4 h-4 mr-2" />
@@ -333,6 +356,7 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
         </div>
+
 
         <div className="space-y-6">
           {loading ? (
@@ -375,7 +399,9 @@ const Dashboard = () => {
                     </div>
                   </div>
 
+
                   <p className="text-muted-foreground mb-4">{request.description}</p>
+
 
                   {request.tags && request.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -386,6 +412,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                   )}
+
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-6 text-sm text-muted-foreground">
@@ -421,6 +448,7 @@ const Dashboard = () => {
                         </Button>
                       </div>
 
+
                       {activePopupId === request._id && (
                         <div className="absolute bottom-12 right-0 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80 transition-all duration-300 transform translate-y-2 opacity-100 z-50 backdrop-blur-sm">
                           <div className="flex items-center justify-between mb-4">
@@ -436,9 +464,11 @@ const Dashboard = () => {
                             </button>
                           </div>
 
+
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                             Choose a file type to upload your response
                           </p>
+
 
                           <div className="space-y-3">
                             {/* Image Upload */}
@@ -477,6 +507,7 @@ const Dashboard = () => {
                               </label>
                             </label>
 
+
                             {/* Video Upload */}
                             <label className="block">
                               <input
@@ -512,6 +543,7 @@ const Dashboard = () => {
                                 </div>
                               </label>
                             </label>
+
 
                             {/* File Upload */}
                             <label className="block">
@@ -549,6 +581,7 @@ const Dashboard = () => {
                             </label>
                           </div>
 
+
                           {uploading && (
                             <div className="mt-4 flex items-center justify-center space-x-2 text-blue-600 dark:text-blue-400">
                               <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
@@ -557,6 +590,7 @@ const Dashboard = () => {
                           )}
                         </div>
                       )}
+
 
                     </div>
                   </div>
@@ -573,5 +607,6 @@ const Dashboard = () => {
     </div>
   );
 };
+
 
 export default Dashboard;

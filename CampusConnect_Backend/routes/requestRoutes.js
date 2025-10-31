@@ -2,10 +2,9 @@ import express from 'express';
 import Request from '../models/Request.js';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
-
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
-
 
 // Helper function to calculate time ago
 function getTimeAgo(date) {
@@ -18,7 +17,6 @@ function getTimeAgo(date) {
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
   return `${Math.floor(diffInSeconds / 2592000)} months ago`;
 }
-
 
 // Create a new request
 router.post('/requests', authenticateToken, async (req, res) => {
@@ -60,7 +58,6 @@ router.post('/requests', authenticateToken, async (req, res) => {
   }
 });
 
-
 // Get all requests
 router.get('/requests', async (req, res) => {
   try {
@@ -94,6 +91,7 @@ router.get('/requests', async (req, res) => {
     
     const requests = await Request.find(query)
       .populate('requester', 'firstName lastName avatar major')
+      .populate('responses.user', 'firstName lastName avatar major') // ADDED: Populate response users
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -111,27 +109,35 @@ router.get('/requests', async (req, res) => {
   }
 });
 
-
-// Get requests by user
+// UPDATED: Get requests by user - NOW INCLUDES RESPONSE DATA WITH FILES
 router.get('/requests/user/:userId', async (req, res) => {
   try {
     const requests = await Request.find({ requester: req.params.userId })
       .populate('requester', 'firstName lastName avatar major')
+      .populate('responses.user', 'firstName lastName avatar major') // ADDED: Populate response users
       .sort({ createdAt: -1 });
+    
+    // Debug log to verify file data is present
+    console.log('Fetched user requests with responses:');
+    requests.forEach(req => {
+      console.log(`Request: ${req.title}, Responses: ${req.responses.length}`);
+      req.responses.forEach((resp, idx) => {
+        console.log(`  Response ${idx}: ${resp.userName}, File: ${resp.fileName || 'No file'}`);
+      });
+    });
     
     res.json(requests);
   } catch (error) {
+    console.error('Error fetching user requests:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-
-// Respond to a request
-// UPDATED: Now increments user's requestsResponded count
-router.post('/requests/:id/respond', authenticateToken, async (req, res) => {
+// UPDATED: Respond to a request with file upload support
+router.post('/requests/:id/respond', authenticateToken, upload.single('file'), async (req, res) => {
   try {
     const { message } = req.body;
-    const userId = req.user._id; // Get user from JWT token
+    const userId = req.user._id;
     
     const user = await User.findById(userId);
     if (!user) {
@@ -143,17 +149,40 @@ router.post('/requests/:id/respond', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Request not found' });
     }
     
-    // Add response
-    request.responses.push({
+    // Determine file type based on file mimetype
+    let fileType = 'File';
+    if (req.file) {
+      if (req.file.mimetype.startsWith('image/')) {
+        fileType = 'Image';
+      } else if (req.file.mimetype.startsWith('video/')) {
+        fileType = 'Video';
+      }
+    }
+    
+    // Add response with file info
+    const responseData = {
       user: userId,
       userName: `${user.firstName} ${user.lastName}`,
-      message
+      message,
+      filePath: req.file ? req.file.path : null,
+      fileName: req.file ? req.file.originalname : null,
+      fileType: req.file ? fileType : null
+    };
+    
+    // Debug log
+    console.log('Adding response with file:', {
+      userName: responseData.userName,
+      hasFile: !!req.file,
+      fileName: responseData.fileName,
+      fileType: responseData.fileType,
+      filePath: responseData.filePath
     });
     
+    request.responses.push(responseData);
     request.responseCount = request.responses.length;
     await request.save();
     
-    // NEW: Increment user's requestsResponded count
+    // Increment user's requestsResponded count
     user.requestsResponded = (user.requestsResponded || 0) + 1;
     await user.save();
     
@@ -167,7 +196,6 @@ router.post('/requests/:id/respond', authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 // Update request status
 router.patch('/requests/:id/status', async (req, res) => {
@@ -188,8 +216,7 @@ router.patch('/requests/:id/status', async (req, res) => {
   }
 });
 
-
-// Get request responses
+// UPDATED: Get request responses with debug logging
 router.get('/requests/:id/responses', async (req, res) => {
   try {
     const request = await Request.findById(req.params.id)
@@ -199,12 +226,62 @@ router.get('/requests/:id/responses', async (req, res) => {
       return res.status(404).json({ error: 'Request not found' });
     }
     
+    // Debug log
+    console.log(`Fetching responses for request: ${request.title}`);
+    console.log(`Total responses: ${request.responses.length}`);
+    request.responses.forEach((resp, idx) => {
+      console.log(`Response ${idx}:`, {
+        userName: resp.userName,
+        hasFile: !!resp.filePath,
+        fileName: resp.fileName,
+        fileType: resp.fileType,
+        filePath: resp.filePath
+      });
+    });
+    
     res.json(request.responses);
   } catch (error) {
+    console.error('Error fetching responses:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// Download response file
+router.get('/requests/:requestId/responses/:responseId/file', async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.requestId);
+    
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    
+    const response = request.responses.id(req.params.responseId);
+    
+    if (!response) {
+      return res.status(404).json({ error: 'Response not found' });
+    }
+    
+    if (!response.filePath) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    
+    console.log('Downloading file:', {
+      filePath: response.filePath,
+      fileName: response.fileName
+    });
+    
+    // This will trigger browser download
+    res.download(response.filePath, response.fileName || 'download', (err) => {
+      if (err) {
+        console.error('Download error:', err);
+        res.status(500).json({ error: 'Error downloading file' });
+      }
+    });
+  } catch (error) {
+    console.error('Error downloading response file:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get user's recent requests for homepage
 router.get('/requests/user/:userId/recent', async (req, res) => {
@@ -221,6 +298,7 @@ router.get('/requests/user/:userId/recent', async (req, res) => {
     
     const requests = await Request.find({ requester: userId })
       .populate('requester', 'firstName lastName avatar major')
+      .populate('responses.user', 'firstName lastName avatar major') // ADDED: Populate response users
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
     
@@ -244,6 +322,5 @@ router.get('/requests/user/:userId/recent', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 export default router;

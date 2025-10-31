@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Clock, CheckCircle, Search, Filter, BookOpen, Users, Calendar, MapPin } from "lucide-react";
+import { Plus, Clock, CheckCircle, Search, Filter, BookOpen, Users, Calendar, MapPin, Download, Eye, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { requestsAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+
+
+const API_URL = "http://localhost:5000/api";
 
 
 const Request = () => {
@@ -18,6 +23,10 @@ const Request = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [responses, setResponses] = useState([]);
+  const [viewResponsesDialog, setViewResponsesDialog] = useState(false);
+  const [loadingResponses, setLoadingResponses] = useState(false);
   const [newRequest, setNewRequest] = useState({
     title: "",
     description: "",
@@ -26,10 +35,8 @@ const Request = () => {
     meetupLocation: ""
   });
 
-
   const { user } = useAuth();
   const { toast } = useToast();
-
 
   // Fetch user's requests on component mount
   useEffect(() => {
@@ -52,10 +59,8 @@ const Request = () => {
       }
     };
 
-
     fetchUserRequests();
   }, [user, toast]);
-
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,7 +68,6 @@ const Request = () => {
     const matchesFilter = filterStatus === "all" || request.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
-
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
@@ -87,7 +91,6 @@ const Request = () => {
       return;
     }
 
-
     try {
       const requestData = {
         title: newRequest.title,
@@ -99,8 +102,7 @@ const Request = () => {
         tags: []
       };
 
-      console.log('Sending request data:', requestData); // Debug log
-
+      console.log('Sending request data:', requestData);
 
       const response = await requestsAPI.createRequest(requestData);
       
@@ -108,7 +110,6 @@ const Request = () => {
         title: "Success",
         description: "Request created successfully!",
       });
-
 
       // Reset form
       setNewRequest({
@@ -119,21 +120,18 @@ const Request = () => {
         meetupLocation: ""
       });
 
-
       // Refresh requests list
       const updatedResponse = await requestsAPI.getUserRequests(user._id);
       setRequests(updatedResponse.data);
 
-
     } catch (error) {
       console.error('Error creating request:', error);
       
-      // Better error messaging
       const errorMessage = error.response?.data?.error || 
                           error.response?.data?.message || 
                           "Failed to create request";
       
-      console.log('Error details:', error.response?.data); // Debug log
+      console.log('Error details:', error.response?.data);
       
       toast({
         title: "Error",
@@ -143,6 +141,45 @@ const Request = () => {
     }
   };
 
+  // NEW: Fetch responses for a request
+  const handleViewResponses = async (request) => {
+    setSelectedRequest(request);
+    setLoadingResponses(true);
+    setViewResponsesDialog(true);
+    
+    try {
+      const response = await requestsAPI.getRequestResponses(request._id);
+      setResponses(response.data);
+    } catch (error) {
+      console.error('Error fetching responses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load responses",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingResponses(false);
+    }
+  };
+
+  // NEW: Download response file
+  const handleDownloadFile = async (requestId, responseId, fileName) => {
+    try {
+      window.open(`${API_URL}/requests/${requestId}/responses/${responseId}/file`, '_blank');
+      
+      toast({
+        title: "Success",
+        description: "Download started!",
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download file",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
@@ -152,7 +189,6 @@ const Request = () => {
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
-
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -164,6 +200,14 @@ const Request = () => {
     }
   };
 
+  const getFileTypeColor = (fileType) => {
+    switch (fileType) {
+      case "Image": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "Video": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      case "File": return "bg-green-500/20 text-green-400 border-green-500/30";
+      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    }
+  };
 
   return (
     <div className="min-h-screen pt-24 px-4 pb-8">
@@ -214,7 +258,6 @@ const Request = () => {
                   />
                 </div>
 
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
@@ -233,7 +276,6 @@ const Request = () => {
                     </Select>
                   </div>
 
-
                   <div className="space-y-2">
                     <Label htmlFor="urgency">Urgency</Label>
                     <Select value={newRequest.urgency} onValueChange={(value) => setNewRequest({ ...newRequest, urgency: value })}>
@@ -249,7 +291,6 @@ const Request = () => {
                   </div>
                 </div>
 
-
                 <div className="space-y-2">
                   <Label htmlFor="location">Preferred Meetup Location (Optional)</Label>
                   <Input
@@ -260,7 +301,6 @@ const Request = () => {
                   />
                 </div>
 
-
                 <Button type="submit" className="btn-hero w-full">
                   Create Request
                 </Button>
@@ -268,7 +308,6 @@ const Request = () => {
             </DialogContent>
           </Dialog>
         </div>
-
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -295,7 +334,6 @@ const Request = () => {
           </Select>
         </div>
 
-
         {/* Requests List */}
         <div className="space-y-6">
           {loading ? (
@@ -305,7 +343,11 @@ const Request = () => {
             </div>
           ) : filteredRequests.length > 0 ? (
             filteredRequests.map((request) => (
-              <Card key={request._id} className="glass-card hover-lift border-0">
+              <Card 
+                key={request._id} 
+                className="glass-card hover-lift border-0 cursor-pointer"
+                onClick={() => handleViewResponses(request)}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
@@ -338,19 +380,33 @@ const Request = () => {
                     </div>
                   </div>
 
-
                   <p className="text-muted-foreground mb-4">{request.description}</p>
-
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center space-x-4">
-                      <span>{request.responseCount || 0} responses</span>
+                      <span className="flex items-center">
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        {request.responseCount || 0} responses
+                      </span>
                       <span className="flex items-center">
                         <MapPin className="w-3 h-3 mr-1" />
                         {request.location}
                       </span>
                     </div>
-                    <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                    <div className="flex items-center space-x-2">
+                      <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewResponses(request);
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View Responses
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -367,10 +423,107 @@ const Request = () => {
             </div>
           )}
         </div>
+
+        {/* View Responses Dialog */}
+        <Dialog open={viewResponsesDialog} onOpenChange={setViewResponsesDialog}>
+          <DialogContent className="glass-card border-0 max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedRequest?.title}</DialogTitle>
+            </DialogHeader>
+            
+            {selectedRequest && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Description</h4>
+                  <p className="text-muted-foreground">{selectedRequest.description}</p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Badge className={getUrgencyColor(selectedRequest.urgency)}>
+                    {selectedRequest.urgency}
+                  </Badge>
+                  <Badge variant="secondary">{selectedRequest.category}</Badge>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-4">Responses ({responses.length})</h4>
+                  
+                  {loadingResponses ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">Loading responses...</p>
+                    </div>
+                  ) : responses.length > 0 ? (
+                    <div className="space-y-4">
+                      {responses.map((response) => (
+                        <Card key={response._id} className="glass-card border-0">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="w-10 h-10">
+                                  <AvatarImage src={response.user?.avatar} />
+                                  <AvatarFallback>
+                                    {response.userName.split(' ').map(n => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-semibold">{response.userName}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(response.respondedAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {response.fileType && (
+                                <Badge className={getFileTypeColor(response.fileType)}>
+                                  {response.fileType}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <p className="text-muted-foreground mb-3">{response.message}</p>
+
+                            {response.filePath && (
+                              <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
+                                <div className="flex items-center space-x-2">
+                                  <div className="p-2 bg-primary/20 rounded">
+                                    {response.fileType === 'Image' && <span>📷</span>}
+                                    {response.fileType === 'Video' && <span>🎥</span>}
+                                    {response.fileType === 'File' && <span>📁</span>}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">{response.fileName}</p>
+                                    <p className="text-xs text-muted-foreground">{response.fileType}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadFile(selectedRequest._id, response._id, response.fileName)}
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  Download
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">No responses yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 };
-
 
 export default Request;

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+
 const requestSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -54,6 +55,9 @@ const requestSchema = new mongoose.Schema({
     },
     userName: String,
     message: String,
+    filePath: String,  // NEW: Store uploaded file path
+    fileName: String,  // NEW: Store original file name
+    fileType: String,  // NEW: Store file type (Image, Video, File)
     respondedAt: {
       type: Date,
       default: Date.now
@@ -66,6 +70,7 @@ const requestSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
 
 const Request = mongoose.model('Request', requestSchema);
 export default Request;
