@@ -14,6 +14,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { chatsAPI } from "../services/api";
 import { authAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
+import { stringToHslColor } from "@/lib/utils";
 import EmojiPicker from 'emoji-picker-react';
 
 
@@ -352,8 +353,17 @@ const Chat = () => {
                             </div>
                           ) : (
                             <Avatar className="w-12 h-12 ring-2 ring-purple-200 dark:ring-purple-600">
-                              <AvatarImage src="/placeholder.svg" />
-                              <AvatarFallback className="bg-gradient-to-br from-purple-400 to-emerald-400 text-white font-semibold">
+                              {chat.participants[0]?.avatar && (
+                                <AvatarImage src={chat.participants[0].avatar} />
+                              )}
+                              <AvatarFallback
+                                className="text-white font-semibold"
+                                style={{
+                                  backgroundColor: stringToHslColor(
+                                    chat.participants[0]?.userName || chat.participants[0]?._id || "user"
+                                  ),
+                                }}
+                              >
                                 {chat.participants[0]?.userName?.split(' ').map(n => n[0]).join('') || 'U'}
                               </AvatarFallback>
                             </Avatar>
@@ -392,8 +402,17 @@ const Chat = () => {
                       </div>
                     ) : (
                       <Avatar className="w-10 h-10 ring-2 ring-white">
-                        <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback className="bg-white text-purple-700 font-semibold">
+                        {currentChat.participants[0]?.avatar && (
+                          <AvatarImage src={currentChat.participants[0].avatar} />
+                        )}
+                        <AvatarFallback
+                          className="text-white font-semibold"
+                          style={{
+                            backgroundColor: stringToHslColor(
+                              currentChat.participants[0]?.userName || currentChat.participants[0]?._id || "user"
+                            ),
+                          }}
+                        >
                           {currentChat.participants[0]?.userName?.split(' ').map(n => n[0]).join('') || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -428,22 +447,24 @@ const Chat = () => {
                     ) : (
                       messages.map((message) => {
                         const isCurrentUser = message.sender === user._id;
+                        const avatarSrc = isCurrentUser ? user?.avatar : message.senderAvatar;
+                        const avatarName = isCurrentUser ? (user?.userName || user?.name || user?.email) : message.senderName;
+
                         return (
                           <div
                             key={message._id}
-                            className={`flex items-end space-x-2 ${
-                              isCurrentUser ? "flex-row-reverse space-x-reverse" : ""
-                            }`}
+                            className={`flex items-end space-x-2 ${isCurrentUser ? "flex-row-reverse space-x-reverse" : ""}`}
                           >
-                            {!isCurrentUser && (
-                              <Avatar className="w-8 h-8 mb-1 ring-2 ring-gray-200 dark:ring-gray-700">
-                                <AvatarImage src="/placeholder.svg" />
-                                <AvatarFallback className="bg-gradient-to-br from-purple-400 to-emerald-400 text-white text-xs font-semibold">
-                                  {message.senderName?.split(' ').map(n => n[0]).join('') || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
-                            
+                            <Avatar className="w-8 h-8 mb-1 ring-2 ring-gray-200 dark:ring-gray-700">
+                              {avatarSrc && <AvatarImage src={avatarSrc} />}
+                              <AvatarFallback
+                                className="text-white text-xs font-semibold"
+                                style={{ backgroundColor: stringToHslColor(avatarName || message.sender || "user") }}
+                              >
+                                {avatarName?.split(' ').map(n => n[0]).join('') || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+
                             <div className={`max-w-xs lg:max-w-md ${isCurrentUser ? "ml-auto" : ""}`}>
                               <div
                                 className={`rounded-2xl px-4 py-2 shadow-md ${
@@ -453,16 +474,11 @@ const Chat = () => {
                                 }`}
                               >
                                 {!isCurrentUser && (
-                                  <p className="text-xs font-semibold gradient-text-green mb-1">
-                                    {message.senderName}
-                                  </p>
+                                  <p className="text-xs font-semibold gradient-text-green mb-1">{message.senderName}</p>
                                 )}
                                 <p className="text-sm leading-relaxed">{message.content}</p>
                                 <p className={`text-xs mt-1 ${isCurrentUser ? 'text-purple-100' : 'text-gray-500 dark:text-gray-400'}`}>
-                                  {new Date(message.createdAt).toLocaleTimeString('en-US', { 
-                                    hour: 'numeric', 
-                                    minute: '2-digit' 
-                                  })}
+                                  {new Date(message.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                                 </p>
                               </div>
                             </div>
