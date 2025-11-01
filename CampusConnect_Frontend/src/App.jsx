@@ -10,6 +10,8 @@ import Welcome from "./pages/Welcome";
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Auth/Login";
 import Signup from "./pages/Auth/Signup";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
+import ResetPassword from "./pages/Auth/ResetPassword";
 import Request from "./pages/Request";
 import Posts from "./pages/Posts";
 import Dashboard from "./pages/Dashboard";
@@ -32,6 +34,8 @@ const App = () => {
                 <Route path="/" element={<Welcome />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/home" element={
                   <ProtectedRoute>
                     <Homepage />
