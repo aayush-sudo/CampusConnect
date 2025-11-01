@@ -47,14 +47,14 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  signup: (userData) => api.post('/signup', userData),
-  login: (credentials) => api.post('/login', credentials),
-  logout: () => api.post('/logout'),
-  getProfile: () => api.get('/me'),
-  updateProfile: (userData) => api.put('/profile', userData),
-  resetPassword: (email) => api.post('/reset-password', { email }),
-  resetPasswordWithToken: (token, { password }) => api.post(`/reset-password/${token}`, { password }),
-  searchUsersByEmail: (emails) => api.post('/users/search', { emails }),
+  signup: (userData) => api.post('/auth/signup', userData),
+  login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
+  getProfile: () => api.get('/auth/me'),
+  updateProfile: (userData) => api.put('/auth/profile', userData),
+  resetPassword: (email) => api.post('/auth/reset-password', { email }),
+  resetPasswordWithToken: (token, { password }) => api.post(`/auth/reset-password/${token}`, { password }),
+  searchUsersByEmail: (emails) => api.post('/auth/users/search', { emails }),
 };
 
 // Posts API
