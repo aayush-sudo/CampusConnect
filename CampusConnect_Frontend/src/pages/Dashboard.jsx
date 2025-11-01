@@ -167,24 +167,63 @@ const Dashboard = () => {
 
 
   const handleChatWithUser = async (request) => {
-    try {
-      const chatData = {
-        title: `Chat with ${request.requesterName}`,
-        description: `Discussion about: ${request.title}`,
-        participantIds: [request.requester._id],
-        type: 'direct'
-      };
-      const response = await chatsAPI.createChat(chatData);
-      toast({
-        title: "Chat Created",
-        description: "Starting conversation with the requester",
-      });
-      navigate('/chat');
-    } catch (error) {
-      console.error('Error creating chat:', error);
+    if (!user) {
       toast({
         title: "Error",
-        description: "Failed to start chat",
+        description: "You must be logged in to start a chat",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First, check if a direct chat already exists between the current user and the requester
+      let existingChat = null;
+      try {
+        console.log('Checking for existing chat between:', user._id, 'and', request.requester._id);
+        const findChatResponse = await chatsAPI.findDirectChat(user._id, request.requester._id);
+        console.log('Found existing chat:', findChatResponse.data);
+        existingChat = findChatResponse.data;
+      } catch (findError) {
+        // Chat doesn't exist (404 is expected), we'll create a new one
+        if (findError.response?.status === 404) {
+          console.log('No existing chat found, will create new one');
+        } else {
+          console.error('Error finding chat:', findError);
+          console.error('Error details:', findError.response?.data);
+        }
+      }
+
+      if (existingChat && existingChat._id) {
+        // Open existing chat
+        console.log('Opening existing chat:', existingChat._id);
+        toast({
+          title: "Opening Chat",
+          description: "Opening existing conversation",
+        });
+        navigate('/chat', { state: { chatId: existingChat._id } });
+      } else {
+        // Create new chat only if no existing chat was found
+        console.log('Creating new chat between:', user._id, 'and', request.requester._id);
+        const chatData = {
+          title: `Chat with ${request.requesterName}`,
+          description: `Discussion about: ${request.title}`,
+          participantIds: [request.requester._id],
+          type: 'direct'
+        };
+        const response = await chatsAPI.createChat(chatData);
+        toast({
+          title: "Chat Created",
+          description: "Starting conversation with the requester",
+        });
+        navigate('/chat', { state: { chatId: response.data.chat._id } });
+      }
+    } catch (error) {
+      console.error('Error handling chat:', error);
+      console.error('Error response:', error.response);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to start chat",
         variant: "destructive",
       });
     }

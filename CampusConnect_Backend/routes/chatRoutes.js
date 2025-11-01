@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
@@ -62,6 +63,64 @@ router.get('/chats/user/:userId', async (req, res) => {
     
     res.json(chats);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Find existing direct chat between two users
+router.get('/chats/find-direct/:userId1/:userId2', authenticateToken, async (req, res) => {
+  try {
+    const { userId1, userId2 } = req.params;
+    
+    // Convert to ObjectId for proper comparison
+    const userId1Obj = new mongoose.Types.ObjectId(userId1);
+    const userId2Obj = new mongoose.Types.ObjectId(userId2);
+    
+    console.log('Finding direct chat between:', userId1, 'and', userId2);
+    
+    // Find direct chats where both users are participants
+    // Query: type is 'direct', has exactly 2 participants, and both userIds are in participants
+    const chats = await Chat.find({
+      type: 'direct',
+      'participants': { $size: 2 }, // Exactly 2 participants
+      $and: [
+        { 'participants.user': userId1Obj },
+        { 'participants.user': userId2Obj }
+      ]
+    })
+    .populate('participants.user', 'firstName lastName avatar')
+    .populate('createdBy', 'firstName lastName');
+    
+    console.log('Found chats:', chats.length);
+    
+    // Find the chat where both users are participants (double-check)
+    const chat = chats.find(chatDoc => {
+      const participantIds = chatDoc.participants.map(p => {
+        // Handle both populated and unpopulated cases
+        if (typeof p.user === 'object' && p.user._id) {
+          return p.user._id.toString();
+        }
+        return p.user.toString();
+      });
+      
+      const hasUser1 = participantIds.some(id => id === userId1 || id === userId1Obj.toString());
+      const hasUser2 = participantIds.some(id => id === userId2 || id === userId2Obj.toString());
+      
+      const matches = hasUser1 && hasUser2 && participantIds.length === 2;
+      console.log('Chat participants:', participantIds, 'Match:', matches);
+      
+      return matches;
+    });
+    
+    if (!chat) {
+      console.log('No matching chat found');
+      return res.status(404).json({ error: 'No direct chat found' });
+    }
+    
+    console.log('Returning chat:', chat._id);
+    res.json(chat);
+  } catch (error) {
+    console.error('Error finding direct chat:', error);
     res.status(500).json({ error: error.message });
   }
 });

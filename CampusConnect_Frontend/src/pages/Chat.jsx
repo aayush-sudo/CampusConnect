@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { Plus, Send, Search, MoreVertical, Phone, Video, Smile, Paperclip, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ const Chat = () => {
   });
 
   const emojiPickerRef = useRef(null);
+  const location = useLocation();
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -55,6 +57,18 @@ const Chat = () => {
           setLoading(true);
           const response = await chatsAPI.getUserChats(user._id);
           setChats(response.data);
+          
+          // Check if we have a chatId in location state (from navigation)
+          const chatIdFromState = location.state?.chatId;
+          if (chatIdFromState) {
+            // Find and select the chat with the given ID
+            const chatToSelect = response.data.find(chat => chat._id === chatIdFromState);
+            if (chatToSelect) {
+              setSelectedChat(chatToSelect);
+            }
+            // Clear the state after using it
+            window.history.replaceState({}, document.title);
+          }
         } catch (error) {
           console.error('Error fetching chats:', error);
           toast({
@@ -69,7 +83,7 @@ const Chat = () => {
     };
 
     fetchUserChats();
-  }, [user, toast]);
+  }, [user, toast, location.state]);
 
   // Fetch messages when a chat is selected
   useEffect(() => {

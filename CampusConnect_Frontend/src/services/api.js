@@ -102,6 +102,7 @@ export const chatsAPI = {
   sendMessage: (chatId, messageData) => api.post(`/chats/${chatId}/messages`, messageData),
   addParticipant: (chatId, participantData) => api.post(`/chats/${chatId}/participants`, participantData),
   getChatMessages: (chatId, params = {}) => api.get(`/chats/${chatId}/messages`, { params }),
+  findDirectChat: (userId1, userId2) => api.get(`/chats/find-direct/${userId1}/${userId2}`),
 };
 
 // Dashboard API
