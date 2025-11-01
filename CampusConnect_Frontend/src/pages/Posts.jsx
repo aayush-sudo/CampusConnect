@@ -14,7 +14,7 @@ import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://campusconnect-rgx2.onrender.com/api";
 
 
 const Posts = () => {
