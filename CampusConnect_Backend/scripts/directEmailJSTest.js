@@ -5,7 +5,7 @@ import axios from 'axios';
   const serviceId = 'service_3ge2aaq';
   const templateId = 'template_0srp2bf';
   const userId = '8pC2XcKWRJt_7GbPf';
-  const resetUrl = 'http://localhost:8080/reset-password/test-token-123';
+  const resetUrl = 'FRONTEND_URL=https://campus-connect-theta-ruddy.vercel.app/reset-password/test-token-123';
   const toEmail = 'aayush.hardas@gmail.com';
 
   const body = {
