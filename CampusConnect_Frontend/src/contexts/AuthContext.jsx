@@ -96,6 +96,23 @@ export const AuthProvider = ({ children }) => {
     return !!token && !!user;
   };
 
+  const resetPassword = async (email) => {
+    try {
+      console.log('Attempting to reset password for:', email);
+      const response = await authAPI.resetPassword(email);
+      console.log('Reset password response:', response);
+      return { 
+        success: true 
+      };
+    } catch (error) {
+      console.error('Reset password error:', error.response || error);
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Failed to send reset password email' 
+      };
+    }
+  };
+
   const value = {
     user,
     token,
@@ -105,6 +122,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     isAuthenticated,
+    resetPassword,
   };
 
   return (

@@ -28,6 +28,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      error: error.message
+    });
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -44,6 +52,8 @@ export const authAPI = {
   logout: () => api.post('/logout'),
   getProfile: () => api.get('/me'),
   updateProfile: (userData) => api.put('/profile', userData),
+  resetPassword: (email) => api.post('/reset-password', { email }),
+  resetPasswordWithToken: (token, { password }) => api.post(`/reset-password/${token}`, { password }),
   searchUsersByEmail: (emails) => api.post('/users/search', { emails }),
 };
 
