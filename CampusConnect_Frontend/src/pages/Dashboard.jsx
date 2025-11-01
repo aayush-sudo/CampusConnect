@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://campusconnect-rgx2.onrender.com/api";
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
