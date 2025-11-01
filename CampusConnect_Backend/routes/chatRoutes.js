@@ -248,5 +248,24 @@ router.get('/chats/:id/messages', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// Delete a chat (only creator can delete)
+router.delete('/chats/:id', authenticateToken, async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id);
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    // Only the creator can delete the chat
+    if (chat.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Only the chat creator can delete this chat' });
+    }
+
+    await Chat.findByIdAndDelete(req.params.id);
+    return res.json({ message: 'Chat deleted successfully' });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;

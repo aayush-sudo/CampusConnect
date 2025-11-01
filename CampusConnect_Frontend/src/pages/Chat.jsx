@@ -166,6 +166,36 @@ const Chat = () => {
     setNewMessage(prevMessage => prevMessage + emojiObject.emoji);
   };
 
+  const handleDeleteChat = async () => {
+    if (!selectedChat) return;
+    const confirmDelete = window.confirm('Delete this chat? This action cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      await chatsAPI.deleteChat(selectedChat._id);
+
+      toast({
+        title: 'Deleted',
+        description: 'Chat deleted successfully',
+      });
+
+      // Refresh chat list and clear selection/messages
+      if (user?._id) {
+        const updatedResponse = await chatsAPI.getUserChats(user._id);
+        setChats(updatedResponse.data);
+      }
+      setSelectedChat(null);
+      setMessages([]);
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to delete chat',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleCreateChat = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -405,6 +435,11 @@ const Chat = () => {
                       </p>
                     </div>
                   </div>
+                  {(currentChat?.createdBy?._id === user?._id || currentChat?.createdBy === user?._id) && (
+                    <Button size="sm" variant="destructive" onClick={handleDeleteChat} className="bg-red-600 hover:bg-red-700">
+                      Delete Chat
+                    </Button>
+                  )}
                 </div>
 
                 {/* Messages Area */}
