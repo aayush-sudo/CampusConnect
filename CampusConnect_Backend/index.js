@@ -22,6 +22,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = [
+  'https://campus-connect-470484qoh-aayushs-projects-7910b4a6.vercel.app', // Your preview URL
+  'https://campus-connect-theta-ruddy.vercel.app', // Your production URL
+  process.env.FRONTEND_URL // Or dynamically from an environment variable (for flexible environments)
+];
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -29,9 +35,17 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
+  origin: function (origin, callback) {
+    // If no origin (e.g., for postman or server-to-server requests), allow it
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true); // Allow the request
+    } else {
+      callback(new Error('Not allowed by CORS'), false); // Reject the request
+    }
+  },
+  credentials: true, // Allow sending cookies or credentials with the request
 }));
+
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
