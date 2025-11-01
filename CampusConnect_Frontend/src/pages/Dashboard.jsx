@@ -5,16 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { requestsAPI, chatsAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-
 const API_URL = "http://localhost:5000/api";
-
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,16 +23,14 @@ const Dashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [stats, setStats] = useState({
     pendingRequests: 0,
-    requestsResponded: 0, // Changed from helpedToday
-    totalUsers: 0, // Changed from activeUsers
+    requestsResponded: 0,
+    totalUsers: 0,
     responseRate: 0
   });
-
 
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-
 
   // Fetch total user count
   const fetchTotalUsers = async () => {
@@ -47,7 +42,6 @@ const Dashboard = () => {
       return 0;
     }
   };
-
 
   // Fetch current user's requests responded count
   const fetchRequestsResponded = async () => {
@@ -62,7 +56,6 @@ const Dashboard = () => {
       return 0;
     }
   };
-
 
   const fetchDashboardData = async () => {
     try {
@@ -106,13 +99,11 @@ const Dashboard = () => {
     }
   };
 
-
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
   }, [user, toast]);
-
 
   const filteredRequests = incomingRequests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -139,7 +130,6 @@ const Dashboard = () => {
     return matchesSearch && matchesCategory && matchesTime;
   });
 
-
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
       case "high": return "bg-red-500/20 text-red-400 border-red-500/30";
@@ -148,7 +138,6 @@ const Dashboard = () => {
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
-
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -160,11 +149,9 @@ const Dashboard = () => {
     }
   };
 
-
   const handleRespond = (requestId) => {
     setActivePopupId(activePopupId === requestId ? null : requestId);
   };
-
 
   const handleChatWithUser = async (request) => {
     if (!user) {
@@ -177,7 +164,6 @@ const Dashboard = () => {
     }
 
     try {
-      // First, check if a direct chat already exists between the current user and the requester
       let existingChat = null;
       try {
         console.log('Checking for existing chat between:', user._id, 'and', request.requester._id);
@@ -185,7 +171,6 @@ const Dashboard = () => {
         console.log('Found existing chat:', findChatResponse.data);
         existingChat = findChatResponse.data;
       } catch (findError) {
-        // Chat doesn't exist (404 is expected), we'll create a new one
         if (findError.response?.status === 404) {
           console.log('No existing chat found, will create new one');
         } else {
@@ -195,7 +180,6 @@ const Dashboard = () => {
       }
 
       if (existingChat && existingChat._id) {
-        // Open existing chat
         console.log('Opening existing chat:', existingChat._id);
         toast({
           title: "Opening Chat",
@@ -203,7 +187,6 @@ const Dashboard = () => {
         });
         navigate('/chat', { state: { chatId: existingChat._id } });
       } else {
-        // Create new chat only if no existing chat was found
         console.log('Creating new chat between:', user._id, 'and', request.requester._id);
         const chatData = {
           title: `Chat with ${request.requesterName}`,
@@ -229,10 +212,6 @@ const Dashboard = () => {
     }
   };
 
-
-  // ============================================
-  // UPDATED: File upload handler
-  // ============================================
   const handleFileUpload = async (requestId, file, fileType) => {
     if (!user) {
       toast({
@@ -246,13 +225,11 @@ const Dashboard = () => {
     try {
       setUploading(true);
 
-      // Use the API service which already handles FormData correctly
       const response = await requestsAPI.respondToRequest(requestId, {
         message: `Uploaded ${fileType}: ${file.name}`,
-        file: file  // Pass the file object directly
+        file: file
       });
 
-      // Increment the local count immediately for better UX
       setStats(prevStats => ({
         ...prevStats,
         requestsResponded: prevStats.requestsResponded + 1
@@ -263,9 +240,7 @@ const Dashboard = () => {
         description: `${fileType} uploaded successfully!`,
       });
 
-      // Close popup and refresh requests
       setActivePopupId(null);
-      // Refresh the dashboard data to show updated requests
       await fetchDashboardData();
 
     } catch (error) {
@@ -280,7 +255,6 @@ const Dashboard = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen pt-24 px-4 pb-8">
       <div className="max-w-7xl mx-auto">
@@ -290,7 +264,6 @@ const Dashboard = () => {
             Help your fellow students by responding to their requests
           </p>
         </div>
-
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="glass-card border-0">
@@ -307,8 +280,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-
-          {/* UPDATED: Requests Responded */}
           <Card className="glass-card border-0">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -323,8 +294,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-
-          {/* UPDATED: No. of Users */}
           <Card className="glass-card border-0">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -338,7 +307,6 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
-
 
           <Card className="glass-card border-0">
             <CardContent className="p-6">
@@ -354,7 +322,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
-
 
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
@@ -381,7 +348,6 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
 
-
           <Select value={timeFilter} onValueChange={setTimeFilter}>
             <SelectTrigger className="w-32 glass-card border-0">
               <Calendar className="w-4 h-4 mr-2" />
@@ -396,7 +362,6 @@ const Dashboard = () => {
           </Select>
         </div>
 
-
         <div className="space-y-6">
           {loading ? (
             <div className="text-center py-12">
@@ -409,10 +374,13 @@ const Dashboard = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start space-x-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={request.requester.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>{request.requesterName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
+                      {/* SHINING GREEN CIRCLE */}
+                      <div className="relative w-20 h-20 flex-shrink-0">
+                        <div className="absolute inset-0 bg-green-500 rounded-full animate-pulse opacity-75"></div>
+                        <div className="relative w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full shadow-lg shadow-green-500/50 flex items-center justify-center">
+                          <div className="w-16 h-16 bg-green-500 rounded-full"></div>
+                        </div>
+                      </div>
                       
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
@@ -438,9 +406,7 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-
                   <p className="text-muted-foreground mb-4">{request.description}</p>
-
 
                   {request.tags && request.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -451,7 +417,6 @@ const Dashboard = () => {
                       ))}
                     </div>
                   )}
-
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-6 text-sm text-muted-foreground">
@@ -487,7 +452,6 @@ const Dashboard = () => {
                         </Button>
                       </div>
 
-
                       {activePopupId === request._id && (
                         <div className="absolute bottom-12 right-0 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80 transition-all duration-300 transform translate-y-2 opacity-100 z-50 backdrop-blur-sm">
                           <div className="flex items-center justify-between mb-4">
@@ -503,11 +467,9 @@ const Dashboard = () => {
                             </button>
                           </div>
 
-
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                             Choose a file type to upload your response
                           </p>
-
 
                           <div className="space-y-3">
                             {/* Image Upload */}
@@ -546,7 +508,6 @@ const Dashboard = () => {
                               </label>
                             </label>
 
-
                             {/* Video Upload */}
                             <label className="block">
                               <input
@@ -582,7 +543,6 @@ const Dashboard = () => {
                                 </div>
                               </label>
                             </label>
-
 
                             {/* File Upload */}
                             <label className="block">
@@ -620,7 +580,6 @@ const Dashboard = () => {
                             </label>
                           </div>
 
-
                           {uploading && (
                             <div className="mt-4 flex items-center justify-center space-x-2 text-blue-600 dark:text-blue-400">
                               <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
@@ -629,7 +588,6 @@ const Dashboard = () => {
                           )}
                         </div>
                       )}
-
 
                     </div>
                   </div>
@@ -646,6 +604,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
 
 export default Dashboard;
