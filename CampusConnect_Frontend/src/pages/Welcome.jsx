@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { Users, BookOpen, MessageSquare, Calendar, Search, Star, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "../contexts/AuthContext";
 
 const Welcome = () => {
+  const { isAuthenticated, loading } = useAuth();
+  const isLoggedIn = !loading && isAuthenticated();
   const features = [
     {
       icon: BookOpen,
@@ -54,17 +57,35 @@ const Welcome = () => {
               The ultimate platform for students to connect, share resources, and build meaningful relationships within their campus community.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/signup">
-                <Button className="btn-hero text-lg px-8 py-4">
-                  Get Started
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-border/50 hover:border-primary/50">
-                  Sign In
-                </Button>
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link to="/dashboard">
+                    <Button className="btn-hero text-lg px-8 py-4">
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <Link to="/chat">
+                    <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-border/50 hover:border-primary/50">
+                      Open Chat
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/signup">
+                    <Button className="btn-hero text-lg px-8 py-4">
+                      Get Started
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-border/50 hover:border-primary/50">
+                      Sign In
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -122,11 +143,19 @@ const Welcome = () => {
                   <p className="text-black mb-6">
                     Become part of a thriving campus community
                   </p>
-                  <Link to="/signup">
-                    <Button className="btn-hero w-full">
-                      Start Connecting
-                    </Button>
-                  </Link>
+                  {isLoggedIn ? (
+                    <Link to="/chat">
+                      <Button className="btn-hero w-full">
+                        Open Chat
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/signup">
+                      <Button className="btn-hero w-full">
+                        Start Connecting
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -142,12 +171,21 @@ const Welcome = () => {
           <p className="text-xl text-muted-foreground mb-8">
             Join thousands of students already connecting and sharing on CampusConnect.
           </p>
-          <Link to="/signup">
-            <Button className="btn-hero text-lg px-12 py-4">
-              Join CampusConnect Today
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
+          {isLoggedIn ? (
+            <Link to="/dashboard">
+              <Button className="btn-hero text-lg px-12 py-4">
+                Go to Dashboard
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/signup">
+              <Button className="btn-hero text-lg px-12 py-4">
+                Join CampusConnect Today
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          )}
         </div>
       </section>
     </div>

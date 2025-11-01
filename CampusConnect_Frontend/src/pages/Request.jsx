@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Clock, CheckCircle, Search, Filter, BookOpen, Users, Calendar, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Clock, CheckCircle, Search, Filter, BookOpen, Users, Calendar, MapPin, Download, Eye, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +8,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "../contexts/AuthContext";
+import { requestsAPI } from "../services/api";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+
+
+const API_URL = "http://localhost:5000/api";
+
 
 const Request = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [responses, setResponses] = useState([]);
+  const [viewResponsesDialog, setViewResponsesDialog] = useState(false);
+  const [loadingResponses, setLoadingResponses] = useState(false);
   const [newRequest, setNewRequest] = useState({
     title: "",
     description: "",
@@ -20,53 +35,32 @@ const Request = () => {
     meetupLocation: ""
   });
 
-  // Mock user requests data
-  const requests = [
-    {
-      id: 1,
-      title: "Looking for Calculus II Notes",
-      description: "Need comprehensive notes for midterm prep. Looking for detailed explanations and example problems.",
-      category: "Study Material",
-      urgency: "high",
-      status: "pending",
-      responses: 3,
-      timeAgo: "2 hours ago",
-      location: "Library Study Room"
-    },
-    {
-      id: 2,
-      title: "Study Partner for Organic Chemistry",
-      description: "Looking for someone to study with for upcoming exam. Available weekends.",
-      category: "Study Partner",
-      urgency: "medium",
-      status: "complete",
-      responses: 1,
-      timeAgo: "1 day ago",
-      location: "Science Building"
-    },
-    {
-      id: 3,
-      title: "Group Project Team Members",
-      description: "Need 2 more team members for software engineering project. Experience with React preferred.",
-      category: "Project Team",
-      urgency: "medium",
-      status: "pending",
-      responses: 5,
-      timeAgo: "3 days ago",
-      location: "Computer Lab"
-    },
-    {
-      id: 4,
-      title: "Textbook: Introduction to Algorithms",
-      description: "Looking to borrow or buy used copy of CLRS algorithms book.",
-      category: "Textbook",
-      urgency: "low",
-      status: "pending",
-      responses: 2,
-      timeAgo: "1 week ago",
-      location: "Campus Bookstore"
-    }
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Fetch user's requests on component mount
+  useEffect(() => {
+    const fetchUserRequests = async () => {
+      if (user) {
+        try {
+          setLoading(true);
+          const response = await requestsAPI.getUserRequests(user._id);
+          setRequests(response.data);
+        } catch (error) {
+          console.error('Error fetching requests:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load your requests",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserRequests();
+  }, [user, toast]);
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,17 +69,116 @@ const Request = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const handleCreateRequest = (e) => {
+  const handleCreateRequest = async (e) => {
     e.preventDefault();
-    console.log("Creating request:", newRequest);
-    // Reset form
-    setNewRequest({
-      title: "",
-      description: "",
-      category: "",
-      urgency: "",
-      meetupLocation: ""
-    });
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a request",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!newRequest.title || !newRequest.description || !newRequest.category || !newRequest.urgency) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const requestData = {
+        title: newRequest.title,
+        description: newRequest.description,
+        requesterName: user.name || user.username || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous',
+        category: newRequest.category,
+        urgency: newRequest.urgency,
+        location: newRequest.meetupLocation || "Not specified",
+        tags: []
+      };
+
+      console.log('Sending request data:', requestData);
+
+      const response = await requestsAPI.createRequest(requestData);
+      
+      toast({
+        title: "Success",
+        description: "Request created successfully!",
+      });
+
+      // Reset form
+      setNewRequest({
+        title: "",
+        description: "",
+        category: "",
+        urgency: "",
+        meetupLocation: ""
+      });
+
+      // Refresh requests list
+      const updatedResponse = await requestsAPI.getUserRequests(user._id);
+      setRequests(updatedResponse.data);
+
+    } catch (error) {
+      console.error('Error creating request:', error);
+      
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message || 
+                          "Failed to create request";
+      
+      console.log('Error details:', error.response?.data);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // NEW: Fetch responses for a request
+  const handleViewResponses = async (request) => {
+    setSelectedRequest(request);
+    setLoadingResponses(true);
+    setViewResponsesDialog(true);
+    
+    try {
+      const response = await requestsAPI.getRequestResponses(request._id);
+      setResponses(response.data);
+    } catch (error) {
+      console.error('Error fetching responses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load responses",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingResponses(false);
+    }
+  };
+
+  // NEW: Download response file
+  const handleDownloadFile = async (requestId, responseId, fileName) => {
+    try {
+      window.open(`${API_URL}/requests/${requestId}/responses/${responseId}/file`, '_blank');
+      
+      toast({
+        title: "Success",
+        description: "Download started!",
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download file",
+        variant: "destructive",
+      });
+    }
   };
 
   const getUrgencyColor = (urgency) => {
@@ -104,6 +197,15 @@ const Request = () => {
       case "Project Team": return <Users className="w-4 h-4" />;
       case "Textbook": return <BookOpen className="w-4 h-4" />;
       default: return <BookOpen className="w-4 h-4" />;
+    }
+  };
+
+  const getFileTypeColor = (fileType) => {
+    switch (fileType) {
+      case "Image": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "Video": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      case "File": return "bg-green-500/20 text-green-400 border-green-500/30";
+      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
@@ -234,76 +336,191 @@ const Request = () => {
 
         {/* Requests List */}
         <div className="space-y-6">
-          {filteredRequests.map((request) => (
-            <Card key={request.id} className="glass-card hover-lift border-0">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      {getCategoryIcon(request.category)}
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading your requests...</p>
+            </div>
+          ) : filteredRequests.length > 0 ? (
+            filteredRequests.map((request) => (
+              <Card 
+                key={request._id} 
+                className="glass-card hover-lift border-0 cursor-pointer"
+                onClick={() => handleViewResponses(request)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-primary/20 rounded-lg">
+                        {getCategoryIcon(request.category)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-xl">{request.title}</h3>
+                        <p className="text-muted-foreground">{request.category}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-xl">{request.title}</h3>
-                      <p className="text-muted-foreground">{request.category}</p>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getUrgencyColor(request.urgency)}>
+                        {request.urgency}
+                      </Badge>
+                      <Badge className={request.status === 'pending' ? 'status-pending' : 'status-complete'}>
+                        {request.status === 'pending' ? (
+                          <>
+                            <Clock className="w-3 h-3 mr-1" />
+                            Pending
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Complete
+                          </>
+                        )}
+                      </Badge>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Badge className={getUrgencyColor(request.urgency)}>
-                      {request.urgency}
-                    </Badge>
-                    <Badge className={request.status === 'pending' ? 'status-pending' : 'status-complete'}>
-                      {request.status === 'pending' ? (
-                        <>
-                          <Clock className="w-3 h-3 mr-1" />
-                          Pending
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Complete
-                        </>
-                      )}
-                    </Badge>
-                  </div>
-                </div>
 
-                <p className="text-muted-foreground mb-4">{request.description}</p>
+                  <p className="text-muted-foreground mb-4">{request.description}</p>
 
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-4">
-                    <span>{request.responses} responses</span>
-                    <span className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {request.location}
-                    </span>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-4">
+                      <span className="flex items-center">
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        {request.responseCount || 0} responses
+                      </span>
+                      <span className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {request.location}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewResponses(request);
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View Responses
+                      </Button>
+                    </div>
                   </div>
-                  <span>{request.timeAgo}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No requests found</h3>
+              <p className="text-muted-foreground mb-6">
+                {searchQuery || filterStatus !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "You haven't made any requests yet"}
+              </p>
+            </div>
+          )}
         </div>
 
-        {filteredRequests.length === 0 && (
-          <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No requests found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchQuery || filterStatus !== "all"
-                ? "Try adjusting your search or filters"
-                : "You haven't made any requests yet"}
-            </p>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="btn-hero">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Request
-                </Button>
-              </DialogTrigger>
-            </Dialog>
-          </div>
-        )}
+        {/* View Responses Dialog */}
+        <Dialog open={viewResponsesDialog} onOpenChange={setViewResponsesDialog}>
+          <DialogContent className="glass-card border-0 max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedRequest?.title}</DialogTitle>
+            </DialogHeader>
+            
+            {selectedRequest && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Description</h4>
+                  <p className="text-muted-foreground">{selectedRequest.description}</p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Badge className={getUrgencyColor(selectedRequest.urgency)}>
+                    {selectedRequest.urgency}
+                  </Badge>
+                  <Badge variant="secondary">{selectedRequest.category}</Badge>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-4">Responses ({responses.length})</h4>
+                  
+                  {loadingResponses ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">Loading responses...</p>
+                    </div>
+                  ) : responses.length > 0 ? (
+                    <div className="space-y-4">
+                      {responses.map((response) => (
+                        <Card key={response._id} className="glass-card border-0">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="w-10 h-10">
+                                  <AvatarImage src={response.user?.avatar} />
+                                  <AvatarFallback>
+                                    {response.userName.split(' ').map(n => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-semibold">{response.userName}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(response.respondedAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {response.fileType && (
+                                <Badge className={getFileTypeColor(response.fileType)}>
+                                  {response.fileType}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <p className="text-muted-foreground mb-3">{response.message}</p>
+
+                            {response.filePath && (
+                              <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
+                                <div className="flex items-center space-x-2">
+                                  <div className="p-2 bg-primary/20 rounded">
+                                    {response.fileType === 'Image' && <span>📷</span>}
+                                    {response.fileType === 'Video' && <span>🎥</span>}
+                                    {response.fileType === 'File' && <span>📁</span>}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">{response.fileName}</p>
+                                    <p className="text-xs text-muted-foreground">{response.fileType}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadFile(selectedRequest._id, response._id, response.fileName)}
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  Download
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">No responses yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

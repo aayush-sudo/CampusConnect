@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Plus, MessageSquare, Users, BookOpen, Bell, Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const [username, setUsername] = useState(localStorage.getItem("username"));
+  const { user, logout } = useAuth();
 
   const navItems = [
     { icon: Home, label: "Home", path: "/home" },
@@ -19,16 +20,6 @@ const Navigation = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      localStorage.removeItem("userName");
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
 
   return (
     <nav className="glass-card fixed top-4 left-4 right-4 z-50 px-6 py-4">
@@ -60,24 +51,14 @@ const Navigation = () => {
 
         {/* Search and Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative text-black">
-            <Bell className="w-4 h-4" />
-            <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-primary text-white">
-              3
-            </Badge>
-          </Button>
 
-          {username ? (
+          {user ? (
             <div className="flex items-center space-x-3">
-              <span className="ttext-3xl font-bold mb-2 gradient-text-green">Hello, {username}</span>
+              <span className="text-lg font-bold gradient-text-green">Hello, {user.firstName}</span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  localStorage.removeItem("username");
-                  setUsername(null);
-                  window.location.href = "/";
-                }}
+                onClick={logout}
               >
                 Logout
               </Button>
@@ -120,18 +101,16 @@ const Navigation = () => {
               </Link>
             ))}
             <div className="pt-2 border-t border-border">
-              {username ? (
+              {user ? (
                 <div className="flex flex-col space-y-2">
-                  <span className="gradient-text-green">Hello, {username}</span>
+                  <span className="gradient-text-green">Hello, {user.firstName}</span>
                   <Button
                     variant="outline"
                     size="sm"
                     className="w-full"
                     onClick={() => {
-                      localStorage.removeItem("username");
-                      setUsername(null);
+                      logout();
                       setIsMenuOpen(false);
-                      window.location.href = "/";
                     }}
                   >
                     Logout
