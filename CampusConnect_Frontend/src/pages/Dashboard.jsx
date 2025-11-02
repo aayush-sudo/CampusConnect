@@ -9,9 +9,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { requestsAPI, chatsAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 
-const API_URL = "https://campusconnect-rgx2.onrender.com/api";
+// Use centralized `api` instance (baseURL is normalized in services/api.js)
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,7 +35,7 @@ const Dashboard = () => {
   // Fetch total user count
   const fetchTotalUsers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users/count`);
+      const response = await api.get('/users/count');
       return response.data.count;
     } catch (error) {
       console.error('Error fetching total users:', error);
@@ -46,10 +46,7 @@ const Dashboard = () => {
   // Fetch current user's requests responded count
   const fetchRequestsResponded = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/users/me/stats`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.get('/users/me/stats');
       return response.data.requestsResponded;
     } catch (error) {
       console.error('Error fetching requests responded:', error);

@@ -12,10 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { requestsAPI } from "../services/api";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
-
-
-const API_URL = "http://localhost:5000/api";
+import api from "../services/api";
 
 
 const Request = () => {
@@ -165,7 +162,9 @@ const Request = () => {
   // NEW: Download response file
   const handleDownloadFile = async (requestId, responseId, fileName) => {
     try {
-      window.open(`${API_URL}/requests/${requestId}/responses/${responseId}/file`, '_blank');
+  // Use api.defaults.baseURL so we always open the correct deployed backend URL
+  const base = api.defaults?.baseURL || '';
+  window.open(`${base}/requests/${requestId}/responses/${responseId}/file`, '_blank');
       
       toast({
         title: "Success",
