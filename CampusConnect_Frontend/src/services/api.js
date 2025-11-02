@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://campusconnect-rgx2.onrender.com/api';
+// Build API base URL robustly: prefer VITE_API_URL but ensure it includes the `/api` prefix.
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_BASE_URL = (() => {
+  if (!rawApiUrl) return 'https://campusconnect-rgx2.onrender.com/api';
+  // Remove trailing slashes
+  const cleaned = rawApiUrl.replace(/\/+$/, '');
+  // If the provided URL already includes /api at the end, keep it. Otherwise append /api
+  return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
+})();
 
 // Create axios instance
 const api = axios.create({
@@ -47,14 +55,14 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  signup: (userData) => api.post('/auth/signup', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
-  logout: () => api.post('/auth/logout'),
-  getProfile: () => api.get('/auth/me'),
-  updateProfile: (userData) => api.put('/auth/profile', userData),
-  resetPassword: (email) => api.post('/auth/reset-password', { email }),
-  resetPasswordWithToken: (token, { password }) => api.post(`/auth/reset-password/${token}`, { password }),
-  searchUsersByEmail: (emails) => api.post('/auth/users/search', { emails }),
+  signup: (userData) => api.post('/signup', userData),
+  login: (credentials) => api.post('/login', credentials),
+  logout: () => api.post('/logout'),
+  getProfile: () => api.get('/me'),
+  updateProfile: (userData) => api.put('/profile', userData),
+  resetPassword: (email) => api.post('/reset-password', { email }),
+  resetPasswordWithToken: (token, { password }) => api.post(`/reset-password/${token}`, { password }),
+  searchUsersByEmail: (emails) => api.post('/users/search', { emails }),
 };
 
 // Posts API

@@ -10,11 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import axios from "axios";
+import api from "../services/api";
 import { useToast } from "@/components/ui/use-toast";
 
 
-const API_URL = "https://campusconnect-rgx2.onrender.com/api";
+// Use centralized `api` instance (baseURL is normalized in services/api.js)
 
 
 const Posts = () => {
@@ -67,7 +67,7 @@ const Posts = () => {
   const fetchAllPosts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/posts`, {
+      const response = await api.get('/posts', {
         params: {
           category: filterCategory === 'all' ? undefined : filterCategory,
           search: searchQuery || undefined
@@ -93,8 +93,8 @@ const Posts = () => {
     if (!userId) return;
     
     try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/posts/user/${userId}`);
+  setLoading(true);
+  const response = await api.get(`/posts/user/${userId}`);
       setUserPosts(response.data);
     } catch (error) {
       console.error("Error fetching user posts:", error);
@@ -134,7 +134,7 @@ const Posts = () => {
       // Find the post and open the view dialog
       const findAndOpenPost = async () => {
         try {
-          const response = await axios.get(`${API_URL}/posts/${postId}`);
+          const response = await api.get(`/posts/${postId}`);
           if (response.data) {
             // Don't increment view count again, just open dialog
             setSelectedPost(response.data);
@@ -190,11 +190,9 @@ const Posts = () => {
       formData.append('file', selectedFile);
 
 
-      const token = getAuthToken();
-      await axios.post(`${API_URL}/posts`, formData, {
+      await api.post('/posts', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'multipart/form-data'
         }
       });
 
@@ -247,11 +245,9 @@ const Posts = () => {
       }
 
 
-      const token = getAuthToken();
-      await axios.put(`${API_URL}/posts/${postToEdit._id}`, formData, {
+      await api.put(`/posts/${postToEdit._id}`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'multipart/form-data'
         }
       });
 
@@ -284,12 +280,7 @@ const Posts = () => {
   // Delete post
   const handleDeletePost = async () => {
     try {
-      const token = getAuthToken();
-      await axios.delete(`${API_URL}/posts/${postToDelete._id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      await api.delete(`/posts/${postToDelete._id}`);
 
 
       toast({
@@ -319,11 +310,12 @@ const Posts = () => {
   // Download post - UPDATED to use new endpoint
   const handleDownload = async (postId, title) => {
     try {
-      // Increment download count
-      await axios.post(`${API_URL}/posts/${postId}/download`);
+  // Increment download count
+  await api.post(`/posts/${postId}/download`);
       
-      // Use the file download route
-      window.open(`${API_URL}/posts/${postId}/file`, '_blank');
+  // Use the file download route (build absolute URL from api.defaults.baseURL)
+  const base = api.defaults?.baseURL || '';
+  window.open(`${base}/posts/${postId}/file`, '_blank');
 
 
       toast({
@@ -349,8 +341,8 @@ const Posts = () => {
   // View post details
   const handleViewPost = async (post) => {
     try {
-      // Increment view count
-      await axios.post(`${API_URL}/posts/${post._id}/view`);
+  // Increment view count
+  await api.post(`/posts/${post._id}/view`);
       setSelectedPost(post);
       setViewPostDialog(true);
       
@@ -441,16 +433,8 @@ const Posts = () => {
       setLikes(isLiked ? likes - 1 : likes + 1);
       setIsLiked(!isLiked);
 
-      try {
-        const response = await axios.post(
-          `${API_URL}/posts/${post._id}/like`,
-          {},
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
+        try {
+        const response = await api.post(`/posts/${post._id}/like`);
         
         // Sync with server response
         setLikes(response.data.likes);
@@ -1033,9 +1017,7 @@ const Posts = () => {
                         });
                         return;
                       }
-                      axios.post(`${API_URL}/posts/${selectedPost._id}/like`, {}, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                      }).then(() => {
+                      api.post(`/posts/${selectedPost._id}/like`).then(() => {
                         toast({ title: "Success", description: "Post liked!" });
                         fetchAllPosts();
                         fetchUserPosts();
