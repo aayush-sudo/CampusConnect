@@ -24,12 +24,15 @@ const ForgotPassword = () => {
       if (result.success) {
         toast({
           title: "Reset Email Sent",
-          description: "Check your inbox for password reset instructions",
+          description: "If an account exists with this email, you will receive password reset instructions",
         });
+        // Clear the email field after success
+        setEmail("");
       } else {
+        console.error('Reset password failed:', result.error);
         toast({
           title: "Error",
-          description: result.error || "Failed to send reset email",
+          description: "If an account exists with this email, you will receive password reset instructions",
           variant: "destructive",
         });
       }

@@ -60,8 +60,8 @@ export const authAPI = {
   logout: () => api.post('/logout'),
   getProfile: () => api.get('/me'),
   updateProfile: (userData) => api.put('/profile', userData),
-  resetPassword: (email) => api.post('/reset-password', { email }),
-  resetPasswordWithToken: (token, { password }) => api.post(`/reset-password/${token}`, { password }),
+  resetPassword: (email) => api.post('/api/reset-password', { email }),
+  resetPasswordWithToken: (token, { password }) => api.post(`/api/reset-password/${token}`, { password }),
   searchUsersByEmail: (emails) => api.post('/users/search', { emails }),
 };
 
