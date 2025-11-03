@@ -53,6 +53,9 @@ api.interceptors.response.use(
   }
 );
 
+// Log the base URL for debugging
+console.log('API Base URL:', API_BASE_URL);
+
 // Auth API
 export const authAPI = {
   signup: (userData) => api.post('/signup', userData),
@@ -60,8 +63,12 @@ export const authAPI = {
   logout: () => api.post('/logout'),
   getProfile: () => api.get('/me'),
   updateProfile: (userData) => api.put('/profile', userData),
-  resetPassword: (email) => api.post('/api/reset-password', { email }),
-  resetPasswordWithToken: (token, { password }) => api.post(`/api/reset-password/${token}`, { password }),
+  resetPassword: (email) => {
+    const url = '/reset-password';
+    console.log('Reset password request URL:', `${API_BASE_URL}${url}`);
+    return api.post(url, { email });
+  },
+  resetPasswordWithToken: (token, { password }) => api.post(`/reset-password/${token}`, { password }),
   searchUsersByEmail: (emails) => api.post('/users/search', { emails }),
 };
 
