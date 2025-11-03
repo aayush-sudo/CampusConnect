@@ -363,19 +363,48 @@ const Request = () => {
                       <Badge className={getUrgencyColor(request.urgency)}>
                         {request.urgency}
                       </Badge>
-                      <Badge className={request.status === 'pending' ? 'status-pending' : 'status-complete'}>
-                        {request.status === 'pending' ? (
-                          <>
-                            <Clock className="w-3 h-3 mr-1" />
-                            Pending
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Complete
-                          </>
-                        )}
-                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-transparent"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newStatus = request.status === 'pending' ? 'complete' : 'pending';
+                          requestsAPI.updateRequestStatus(request._id, newStatus)
+                            .then(() => {
+                              setRequests(requests.map(r => 
+                                r._id === request._id 
+                                  ? { ...r, status: newStatus }
+                                  : r
+                              ));
+                              toast({
+                                title: "Status Updated",
+                                description: `Request marked as ${newStatus}`,
+                              });
+                            })
+                            .catch(() => {
+                              toast({
+                                title: "Error",
+                                description: "Failed to update request status",
+                                variant: "destructive",
+                              });
+                            });
+                        }}
+                      >
+                        <Badge className={request.status === 'pending' ? 'status-pending hover:cursor-pointer' : 'status-complete hover:cursor-pointer'}>
+                          {request.status === 'pending' ? (
+                            <>
+                              <Clock className="w-3 h-3 mr-1" />
+                              Pending
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Complete
+                            </>
+                          )}
+                        </Badge>
+                      </Button>
                     </div>
                   </div>
 
