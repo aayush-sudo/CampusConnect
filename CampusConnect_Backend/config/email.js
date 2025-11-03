@@ -16,7 +16,7 @@ const createTransporter = () => {
 
 // Sends reset email either via SendGrid, SMTP (nodemailer) or EmailJS (server-side proxy to EmailJS API)
 export const sendResetPasswordEmail = async (email, resetToken) => {
-  const resetUrl = `${process.env.FRONTEND_URL || 'FRONTEND_URL=https://campus-connect-theta-ruddy.vercel.app'}/reset-password/${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL || 'https://campus-connect-theta-ruddy.vercel.app'}/reset-password/${resetToken}`;
 
   // SendGrid provider
   if ((process.env.EMAIL_PROVIDER || '').toLowerCase() === 'sendgrid') {
