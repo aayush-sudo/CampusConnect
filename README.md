@@ -99,7 +99,9 @@ https://campus-connect-theta-ruddy.vercel.app/
 **K.J. Somaiya School of Engineering** | Computer Engineering Dept. | FSDL Sem V (2025)
 
 **Aayush Hardas** - Backend APIs , Authentication , Testing
+
 **Aditya Sontakke** - Frontend design, Backend Integration and APIs,Bug Fixing
+
 **Anirudh Navdhuri** - Database architecture, Chat system , Testing
 
 Contact: aayush.hardas@somaiya.edu | aditya.sontakke@somaiya.edu | anirudh.navuduri@somaiya.edu 
