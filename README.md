@@ -1,5 +1,6 @@
 # CampusConnect
 
+
 A campus collaboration platform for students to request help, share resources, and communicate with peers.
 
 ---
