@@ -1,1 +1,110 @@
-MERN Full Stack Mini Project
+# CampusConnect
+
+A campus collaboration platform for students to request help, share resources, and communicate with peers.
+
+---
+
+## What is CampusConnect?
+
+**CampusConnect** helps university students connect and collaborate by providing three core features:
+
+1. **Request System** - Post help requests (study partners, tutoring, materials) with urgency levels and get responses from peers
+2. **Resource Sharing** - Upload and download study materials (PDFs, notes, assignments) with likes and downloads tracking  
+3. **Real-time Chat** - Direct and group messaging with emoji support
+
+Built using the **MERN stack** (MongoDB, Express.js, React, Node.js) with JWT authentication and responsive design.
+
+---
+
+## How It Works
+
+**For Students Needing Help:**
+- Create a request specifying what you need (tutoring, study partner, materials)
+- Set urgency level (low/medium/high) and category
+- Receive responses from fellow students with messages or file attachments
+- Start a direct chat with helpers
+
+**For Students Offering Help:**
+- Browse the dashboard to see pending requests from peers
+- Filter by category, urgency, or search keywords
+- Respond with text or upload files
+- Track your contribution stats
+
+**Resource Sharing:**
+- Upload study materials, notes, or assignments
+- Organize with categories and tags
+- Download resources shared by others
+- Like and bookmark helpful content
+
+**Communication:**
+- Create direct (1-on-1) or group chats
+- Search for users by email to start conversations
+- Messages update automatically (polling every second)
+- Add emojis to messages
+
+---
+
+## Tech Stack
+
+**Frontend:** React, Vite, TailwindCSS, shadcn/ui components  
+**Backend:** Node.js, Express.js, JWT authentication, Multer (file uploads)  
+**Database:** MongoDB Atlas with Mongoose ODM  
+**Key Features:** Bcrypt password hashing, email-based password reset, responsive design
+
+---
+
+## Database Design
+
+**Users** - Store student profiles (name, email, university, major) with hashed passwords  
+**Posts** - Track uploaded resources with author, file URL, likes, views, downloads  
+**Requests** - Help requests with category, urgency, status, and responses array  
+**Chats** - Conversations with participants, messages (embedded), and chat type (direct/group)
+
+**Relationships:** Posts/Requests/Chats reference User IDs; participant names are denormalized for performance
+
+---
+
+## Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/aayush-sudo/CampusConnect.git
+cd CampusConnect
+
+# Backend setup
+cd CampusConnect_Backend
+npm install
+# Add .env file with MONGODB_URI, JWT_SECRET, etc.
+npm run dev  # Runs on port 5000
+
+# Frontend setup (new terminal)
+cd CampusConnect_Frontend
+npm install
+# Add .env with VITE_API_URL=http://localhost:5000/api
+npm run dev  # Runs on port 8080
+```
+
+---
+
+## Visit The Website
+
+https://campus-connect-theta-ruddy.vercel.app/
+
+---
+
+
+## Team
+
+**K.J. Somaiya School of Engineering** | Computer Engineering Dept. | FSDL Sem V (2025)
+
+**Aayush Hardas** - Backend APIs , Authentication , Testing
+**Aditya Sontakke** - Frontend design, Backend Integration and APIs,Bug Fixing
+**Anirudh Navdhuri** - Database architecture, Chat system , Testing
+
+Contact: aayush.hardas@somaiya.edu | aditya.sontakke@somaiya.edu | anirudh.navuduri@somaiya.edu 
+
+---
+
+## GitHub
+
+https://github.com/aayush-sudo/CampusConnect
